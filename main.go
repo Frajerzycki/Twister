@@ -6,7 +6,6 @@ import (
 	_ "github.com/Frajerzycki/GONSE"
 	"math/big"
 	"os"
-	"strconv"
 )
 
 func printUsage() {
@@ -23,18 +22,15 @@ func main() {
 	}
 
 	var keySize uint = 256
-	lenArgs := len(os.Args)
-	for index := 2; index < lenArgs; index++ {
+	var err error
+	for index := 2; index < len(os.Args); index++ {
 		switch os.Args[index] {
 		case "-s":
-			index++
-			if index < lenArgs {
-				if size, err := strconv.Atoi(os.Args[index]); err == nil {
-					keySize = uint(size)
-					continue
-				}
+			keySize, err = parseKeySize(&index)
+			if err != nil {
+				fmt.Println(err)
+				return
 			}
-			print("Size of key is not an integer!")
 		}
 	}
 	switch os.Args[1] {
