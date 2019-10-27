@@ -15,6 +15,12 @@ func printUsage() {
 	os.Exit(1)
 }
 
+func generateKey(keySize uint) (*big.Int, error) {
+	max := big.NewInt(1)
+	max.Lsh(max, keySize)
+	return rand.Int(rand.Reader, max)
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -35,9 +41,7 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "-g":
-		max := big.NewInt(1)
-		max.Lsh(max, keySize)
-		key, err := rand.Int(rand.Reader, max)
+		key, err := generateKey(keySize)
 		if err != nil {
 			fmt.Println(err)
 			return
