@@ -40,6 +40,7 @@ func main() {
 		key, err := rand.Int(rand.Reader, max)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		fmt.Println(key.Text(16))
 	}
