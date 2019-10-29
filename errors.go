@@ -2,10 +2,11 @@ package main
 
 import "fmt"
 
-type keySizeFormatError struct {
-	keySize string
+type intFormatError struct {
+	representation string
+	base           int
 }
 
-func (err *keySizeFormatError) Error() string {
-	return fmt.Sprintf("Wrong key size format, %v is not an integer.", err.keySize)
+func (err *intFormatError) Error() string {
+	return fmt.Sprintf("Wrong key size format, %v is not an integer in %v base.", err.representation, err.base)
 }
