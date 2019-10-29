@@ -8,22 +8,30 @@ import (
 
 func parseKeySize(index *int) (uint, error) {
 	(*index)++
+	var argument string
 	if *index < len(os.Args) {
-		if size, err := strconv.Atoi(os.Args[*index]); err == nil {
+		argument = os.Args[*index]
+		if size, err := strconv.Atoi(argument); err == nil {
 			return uint(size), nil
 		}
+	} else {
+		argument = ""
 	}
-	return 0, &intFormatError{os.Args[*index], keyBase}
+	return 0, &intFormatError{argument, keySizeBase, "key size"}
 }
 
 func parseKey(index *int) (*big.Int, error) {
 	(*index)++
-	key := new(big.Int)
+	var argument string
 	var ok bool
 	if *index < len(os.Args) {
-		if key, ok = key.SetString(os.Args[*index], keyBase); !ok {
-			return nil, &intFormatError{os.Args[*index], keyBase}
+		argument = os.Args[*index]
+		key := new(big.Int)
+		if key, ok = key.SetString(argument, keyBase); ok {
+			return key, nil
 		}
+	} else {
+		argument = ""
 	}
-	return key, nil
+	return nil, &intFormatError{argument, keyBase, "key"}
 }

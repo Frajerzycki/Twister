@@ -9,8 +9,6 @@ import (
 	"os"
 )
 
-const keyBase int = 16
-
 func printUsage() {
 	fmt.Printf("Usage: %v -g [arguments]\tGenerate NSE secret key\n", os.Args[0])
 	fmt.Printf("or: %v -e [arguments]\tEncrypt data with NSE algorithm\n", os.Args[0])
@@ -61,8 +59,8 @@ func main() {
 			return
 		}
 	}
-	//fmt.Println(key)
-	//fmt.Println(data)
+	fmt.Println(data)
+	fmt.Println(key)
 	switch os.Args[1] {
 	case "-g":
 		key, err := generateKey(keySize)
