@@ -10,12 +10,12 @@ import (
 )
 
 func printUsage() {
-	fmt.Printf("Usage: %v -g [arguments]\tGenerate NSE secret key\n", os.Args[0])
-	fmt.Printf("or: %v -e [arguments]\tEncrypt data with NSE algorithm\n", os.Args[0])
+	fmt.Printf("Usage:\t%v -g [arguments]\tGenerate NSE secret key\n", os.Args[0])
+	fmt.Printf("or:\t%v -e [arguments]\tEncrypt data with NSE algorithm\n", os.Args[0])
 	fmt.Println("Arguments:")
 	fmt.Println("\t-s <size>\tSet desired size of key in bits to <size>, if not used size will be 256 bits")
 	//fmt.Println("\t-f <path>\tSet data to content of file placed in <path>")
-	fmt.Println("\t-i\tSet data to input from stdin, this data have to end with EOF")
+	fmt.Println("\t-i\t\tSet data to input from stdin, this data have to end with EOF")
 	fmt.Println("\t-k <key>\tSet key to <key>")
 	//fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
 	os.Exit(1)
@@ -47,7 +47,6 @@ func main() {
 		switch os.Args[index] {
 		case "-s":
 			keySize, err = parseKeySize(&index)
-
 		case "-f":
 			data, err = getDataFromStd()
 		case "-k":
