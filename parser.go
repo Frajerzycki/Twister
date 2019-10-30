@@ -19,7 +19,7 @@ func getCommandLineArgument(index *int) string {
 func parseKeySize(index *int) (uint, error) {
 	argument := getCommandLineArgument(index)
 	size, err := strconv.Atoi(argument)
-	if err != nil {
+	if err == nil {
 		return uint(size), nil
 	}
 	return 0, err
