@@ -2,12 +2,13 @@ package main
 
 import "fmt"
 
-type intFormatError struct {
+type formatError struct {
 	representation string
 	base           int
 	name           string
+	dataType       string
 }
 
-func (err *intFormatError) Error() string {
-	return fmt.Sprintf("Wrong %v format, \"%v\" is not an integer in %v base.", err.name, err.representation, err.base)
+func (err *formatError) Error() string {
+	return fmt.Sprintf("Wrong %v format, \"%v\" is not an %v in %v base.", err.name, err.representation, err.dataType, err.base)
 }

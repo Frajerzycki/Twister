@@ -52,15 +52,14 @@ func main() {
 			data, err = getDataFromStd()
 		case "-k":
 			key, err = parseKey(&index)
-
+		case "-kf":
+			key, err = parseKeyFromFile(&index)
 		}
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	}
-	fmt.Println(data)
-	fmt.Println(key)
 	switch os.Args[1] {
 	case "-g":
 		key, err := generateKey(keySize)
@@ -68,8 +67,11 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(key.Text(keyBase))
-
+		fmt.Print(key.Text(keyBase))
+	case "-e":
+		// Only for testing.
+		fmt.Println(data)
+		fmt.Println(key)
 	}
 
 }
