@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"crypto/rand"
 	"fmt"
-	_ "github.com/Frajerzycki/GONSE"
+	"github.com/Frajerzycki/GONSE"
+	"io/ioutil"
 	"math/big"
 	"os"
 )
@@ -27,9 +28,18 @@ func generateKey(keySize uint) (*big.Int, error) {
 	return rand.Int(rand.Reader, max)
 }
 
+func randomBytes(length int) ([]byte, error) {
+	salt := make([]byte, length)
+	_, err := rand.Read(salt)
+	if err != nil {
+		return nil, err
+	}
+	return salt, nil
+}
+
 func getDataFromStd() ([]byte, error) {
 	reader := bufio.NewReader(os.Stdin)
-	return reader.ReadBytes(byte(0))
+	return ioutil.ReadAll(reader)
 }
 
 func main() {
@@ -47,7 +57,7 @@ func main() {
 		switch os.Args[index] {
 		case "-s":
 			keySize, err = parseKeySize(&index)
-		case "-f":
+		case "-i":
 			data, err = getDataFromStd()
 		case "-k":
 			key, err = parseKey(&index)
@@ -59,6 +69,7 @@ func main() {
 			return
 		}
 	}
+
 	switch os.Args[1] {
 	case "-g":
 		key, err := generateKey(keySize)
@@ -68,9 +79,22 @@ func main() {
 		}
 		fmt.Print(key.Text(keyBase))
 	case "-e":
-		// Only for testing.
-		fmt.Println(data)
-		fmt.Println(key)
+		var salt []byte
+		var IV []int8
+		salt, err = randomBytes(16)
+		IV, err := nse.GenerateIV(len(data))
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		ciphertext, err := nse.Encrypt(data, salt, IV, key)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		// Only for testing
+		fmt.Println(ciphertext)
 	}
 
 }
