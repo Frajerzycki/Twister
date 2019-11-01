@@ -43,7 +43,7 @@ func main() {
 		return
 	}
 
-	parameters := parser.Parameters{KeySize: uint(256)}
+	parameters := parser.Arguments{KeySize: uint(256)}
 	err := parser.ParseArguments(&parameters)
 	if err != nil {
 		fmt.Println(err)

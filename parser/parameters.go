@@ -2,7 +2,7 @@ package parser
 
 import "math/big"
 
-type Parameters struct {
+type Arguments struct {
 	KeySize          uint
 	Key              *big.Int
 	Data             []byte

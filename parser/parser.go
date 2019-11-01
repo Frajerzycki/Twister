@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-func ParseArguments(parameters *Parameters) error {
+func ParseArguments(parameters *Arguments) error {
 	var err error
 	for index := 2; index < len(os.Args); index++ {
 		err = nil
