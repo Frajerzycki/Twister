@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
+	"./parser"
 	"crypto/rand"
 	"fmt"
 	"github.com/Frajerzycki/GONSE"
-	"io/ioutil"
 	"math/big"
 	"os"
 )
@@ -18,6 +17,7 @@ func printUsage() {
 	//fmt.Println("\t-f <path>\tSet data to content of file placed in <path>")
 	fmt.Println("\t-i\t\tSet data to input from stdin, this data have to end with EOF")
 	fmt.Println("\t-k <key>\tSet key to <key>")
+	fmt.Println("\t-t[i|o][k|d]\tSet input/output key/data format to text, if not used format will be binary\n\t\t\tAbove parameter doesn't matter on input data for encryption.")
 	//fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
 	os.Exit(1)
 }
@@ -37,64 +37,48 @@ func randomBytes(length int) ([]byte, error) {
 	return salt, nil
 }
 
-func getDataFromStd() ([]byte, error) {
-	reader := bufio.NewReader(os.Stdin)
-	return ioutil.ReadAll(reader)
-}
-
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
 		return
 	}
 
-	var keySize uint = 256
-	var err error
-	var data []byte
-	var key *big.Int
-	for index := 2; index < len(os.Args); index++ {
-		err = nil
-		switch os.Args[index] {
-		case "-s":
-			keySize, err = parseKeySize(&index)
-		case "-i":
-			data, err = getDataFromStd()
-		case "-k":
-			key, err = parseKey(&index)
-		case "-kf":
-			key, err = parseKeyFromFile(&index)
-		}
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+	parameters := parser.Parameters{KeySize: uint(256)}
+	err := parser.ParseArguments(&parameters)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
 	switch os.Args[1] {
 	case "-g":
-		key, err := generateKey(keySize)
+		parameters.Key, err = generateKey(parameters.KeySize)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Print(key.Text(keyBase))
+		if parameters.IsOutputDataText {
+			fmt.Print(parameters.Key.Text(parser.KeyBase))
+		}
 	case "-e":
 		var salt []byte
 		var IV []int8
 		salt, err = randomBytes(16)
-		IV, err := nse.GenerateIV(len(data))
+		IV, err := nse.GenerateIV(len(parameters.Data))
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		ciphertext, err := nse.Encrypt(data, salt, IV, key)
+		ciphertext, err := nse.Encrypt(parameters.Data, salt, IV, parameters.Key)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 		// Only for testing
-		fmt.Println(ciphertext)
+		if parameters.IsOutputDataText {
+			fmt.Println(ciphertext)
+		}
 	}
 
 }
