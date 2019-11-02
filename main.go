@@ -3,6 +3,7 @@ package main
 import (
 	"./parser"
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"github.com/Frajerzycki/GONSE"
 	"math/big"
@@ -17,7 +18,7 @@ func printUsage() {
 	//fmt.Println("\t-f <path>\tSet data to content of file placed in <path>")
 	fmt.Println("\t-i\t\tSet data to input from stdin, this data have to end with EOF")
 	fmt.Println("\t-k <key>\tSet key to <key>")
-	fmt.Println("\t-t[i|o][k|d]\tSet input/output key/data format to text, if not used format will be binary\n\t\t\tAbove parameter doesn't matter on input data for encryption.")
+	fmt.Println("\t-t[i|o][k|d]\tSet input/output key/data format to text, if not used format will be binary\n\t\t\tAbove parameter doesn't matter on input data for encryption. Also, if key is given in terminal it is automatically set to text format.")
 	//fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
 	os.Exit(1)
 }
@@ -77,7 +78,8 @@ func main() {
 		}
 		// Only for testing
 		if parameters.IsOutputDataText {
-			fmt.Println(ciphertext)
+			bytes, _ := nse.Int64sToBytes(ciphertext)
+			fmt.Printf("\n%v\n", base64.StdEncoding.EncodeToString(bytes))
 		}
 	}
 
