@@ -2,10 +2,12 @@ package main
 
 import (
 	"./parser"
+	"bufio"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"github.com/Frajerzycki/GONSE"
+	"io/ioutil"
 	"math/big"
 	"os"
 )
@@ -38,6 +40,11 @@ func randomBytes(length int) ([]byte, error) {
 	return salt, nil
 }
 
+func getDataFromStd() ([]byte, error) {
+	reader := bufio.NewReader(os.Stdin)
+	return ioutil.ReadAll(reader)
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -49,6 +56,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 		return
+	}
+
+	var data []byte
+	if parameters.Source.IsStdin {
+		data, err = getDataFromStd()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
 
 	switch os.Args[1] {
@@ -65,13 +81,13 @@ func main() {
 		var salt []byte
 		var IV []int8
 		salt, err = randomBytes(16)
-		IV, err := nse.GenerateIV(len(parameters.Data))
+		IV, err := nse.GenerateIV(len(data))
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		ciphertext, err := nse.Encrypt(parameters.Data, salt, IV, parameters.Key)
+		ciphertext, err := nse.Encrypt(data, salt, IV, parameters.Key)
 		if err != nil {
 			fmt.Println(err)
 			return

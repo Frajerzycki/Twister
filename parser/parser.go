@@ -11,7 +11,7 @@ func ParseArguments(parameters *Arguments) error {
 		case "-s":
 			parameters.KeySize, err = parseKeySize(&index)
 		case "-i":
-			parameters.Data, err = getDataFromStd()
+			parameters.Source = DataSource{IsStdin: true}
 		case "-k":
 			parameters.Key, err = parseKey(&index)
 		case "-kf":

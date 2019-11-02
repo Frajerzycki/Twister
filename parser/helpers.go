@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"bufio"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -53,9 +52,4 @@ func parseKeyFromFile(index *int) (*big.Int, error) {
 		return key, nil
 	}
 	return nil, &formatError{keyString, KeyBase, "key", "integer"}
-}
-
-func getDataFromStd() ([]byte, error) {
-	reader := bufio.NewReader(os.Stdin)
-	return ioutil.ReadAll(reader)
 }
