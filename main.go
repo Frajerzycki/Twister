@@ -20,7 +20,7 @@ func printUsage() {
 	fmt.Println("\t-s <size>\tSet desired size of key in bits to <size>, if not used size will be 256 bits")
 	//fmt.Println("\t-f <path>\tSet data to content of file placed in <path>")
 	fmt.Println("\t-k <key>\tSet key to <key>")
-	fmt.Println("\t-t[i|o][k|d]\tSet input/output key/data format to text, if not used format will be binary\n\t\t\tAbove parameter doesn't matter on input data for encryption. Also, if key is given in terminal it is automatically set to text format.")
+	fmt.Println("\t-b[i|o][k|d]\tSet input/output key/data format to binary, if not used format will be text\n\t\t\tAbove parameter doesn't matter on input data for encryption, beacuse in that context there isn't any difference.")
 	//fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
 	os.Exit(1)
 }
@@ -71,13 +71,13 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		if arguments.KeyInput.IsText {
+		if arguments.KeyInput.IsBinary {
+			key.SetBytes(keyBytes)
+		} else {
 			if lastIndex := len(keyBytes) - 1; keyBytes[lastIndex] == '\n' {
 				keyBytes = keyBytes[:lastIndex]
 			}
 			key.SetString(string(keyBytes), parser.KeyBase)
-		} else {
-			key.SetBytes(keyBytes)
 		}
 	} else {
 		key = nil
@@ -93,6 +93,10 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		if len(data) == 0 {
+			fmt.Println("Data length has to be positive.")
+			return
+		}
 	}
 
 	switch os.Args[1] {
@@ -102,10 +106,10 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		if arguments.KeyOutput.IsText {
-			arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
-		} else {
+		if arguments.KeyOutput.IsBinary {
 			arguments.KeyOutput.Writer.Write(key.Bytes())
+		} else {
+			arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
 		}
 	case "-e":
 		var salt []byte
@@ -129,10 +133,10 @@ func main() {
 		bytes = append(bytes, buffer...)
 		bytes = append(bytes, salt...)
 		// Only for testing
-		if arguments.DataOutput.IsText {
-			arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
-		} else {
+		if arguments.DataOutput.IsBinary {
 			arguments.DataOutput.Writer.Write(bytes)
+		} else {
+			arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
 		}
 	}
 

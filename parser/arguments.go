@@ -6,13 +6,13 @@ import (
 )
 
 type Input struct {
-	IsText bool
-	Reader io.Reader
+	IsBinary bool
+	Reader   io.Reader
 }
 
 type Output struct {
-	IsText bool
-	Writer io.Writer
+	IsBinary bool
+	Writer   io.Writer
 }
 
 type Arguments struct {

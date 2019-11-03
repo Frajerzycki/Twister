@@ -7,28 +7,29 @@ import (
 
 func ParseArguments(arguments *Arguments) error {
 	var err error
-	var hasKeySizeBeenSet bool
+	var hasKeySizeBeenChanged bool
+	var isKeyReadedFromFile bool
 	for index := 2; index < len(os.Args); index++ {
 		err = nil
 		argument := os.Args[index]
 		switch argument {
 		case "-s":
-			if hasKeySizeBeenSet {
+			if hasKeySizeBeenChanged {
 				return &manyParameterValuesError{"Key size"}
 			}
 			arguments.KeySize, err = parseKeySize(&index)
-			hasKeySizeBeenSet = true
+			hasKeySizeBeenChanged = true
 		case "-k":
 			if arguments.KeyInput.Reader != nil {
 				return &manyParameterValuesError{"Key"}
 			}
 			arguments.KeyInput.Reader = strings.NewReader(getCommandLineArgument(&index))
-			arguments.KeyInput.IsText = true
 		case "-kf":
 			if arguments.KeyInput.Reader != nil {
 				return &manyParameterValuesError{"Key"}
 			}
 			arguments.KeyInput.Reader, err = getFileReader(getCommandLineArgument(&index))
+			isKeyReadedFromFile = true
 		default:
 			if submatches := formatArgumentRegexp.FindStringSubmatch(argument); submatches != nil {
 				err = parseFormatType(submatches, arguments)
@@ -38,5 +39,9 @@ func ParseArguments(arguments *Arguments) error {
 			return err
 		}
 	}
+	if !isKeyReadedFromFile && arguments.KeyInput.IsBinary {
+		return binaryInputError
+	}
+
 	return nil
 }

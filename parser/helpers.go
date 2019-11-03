@@ -35,27 +35,27 @@ func getFileReader(path string) (io.Reader, error) {
 func parseFormatType(submatches []string, arguments *Arguments) error {
 	if submatches[2] == "i" {
 		if submatches[3] == "d" {
-			if arguments.DataInput.IsText {
-				return &manyParameterValuesError{"Is input data text"}
+			if arguments.DataInput.IsBinary {
+				return &manyParameterValuesError{"Is input data binary"}
 			}
-			arguments.DataInput.IsText = true
+			arguments.DataInput.IsBinary = true
 		} else {
-			if arguments.KeyInput.IsText {
-				return &manyParameterValuesError{"Is input key text"}
+			if arguments.KeyInput.IsBinary {
+				return &manyParameterValuesError{"Is input key binary"}
 			}
-			arguments.KeyInput.IsText = true
+			arguments.KeyInput.IsBinary = true
 		}
 	} else {
 		if submatches[3] == "d" {
-			if arguments.DataOutput.IsText {
-				return &manyParameterValuesError{"Is output data text"}
+			if arguments.DataOutput.IsBinary {
+				return &manyParameterValuesError{"Is output data binary"}
 			}
-			arguments.DataOutput.IsText = true
+			arguments.DataOutput.IsBinary = true
 		} else {
-			if arguments.KeyOutput.IsText {
-				return &manyParameterValuesError{"Is output key text"}
+			if arguments.KeyOutput.IsBinary {
+				return &manyParameterValuesError{"Is output key binary"}
 			}
-			arguments.KeyOutput.IsText = true
+			arguments.KeyOutput.IsBinary = true
 		}
 	}
 	return nil
