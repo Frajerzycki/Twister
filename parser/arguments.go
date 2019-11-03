@@ -1,18 +1,28 @@
 package parser
 
-import "math/big"
+import (
+	"io"
+	"os"
+)
 
-type DataSource struct {
-	IsStdin bool
-	path    string
+type Input struct {
+	IsText bool
+	Reader io.Reader
+}
+
+type Output struct {
+	IsText bool
+	Writer io.Writer
 }
 
 type Arguments struct {
-	KeySize          uint
-	Key              *big.Int
-	Source           DataSource
-	IsInputDataText  bool
-	IsOutputDataText bool
-	IsInputKeyText   bool
-	IsOutputKeyText  bool
+	DataInput  *Input
+	DataOutput *Output
+	KeyInput   *Input
+	KeyOutput  *Output
+	KeySize    uint
+}
+
+func NewArguments() Arguments {
+	return Arguments{DataInput: &Input{Reader: os.Stdin}, DataOutput: &Output{Writer: os.Stdout}, KeyInput: &Input{}, KeyOutput: &Output{Writer: os.Stdout}, KeySize: uint(256)}
 }

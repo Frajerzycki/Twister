@@ -1,8 +1,7 @@
 package parser
 
 import (
-	"io/ioutil"
-	"math/big"
+	"io"
 	"os"
 	"strconv"
 )
@@ -25,31 +24,10 @@ func parseKeySize(index *int) (uint, error) {
 	return 0, err
 }
 
-func parseKey(index *int) (*big.Int, error) {
-	argument := getCommandLineArgument(index)
-	key := new(big.Int)
-	var ok bool
-	if key, ok = key.SetString(argument, KeyBase); ok {
-		return key, nil
-	}
-	return nil, &formatError{argument, KeyBase, "key", "integer"}
-}
-
-func parseKeyFromFile(index *int) (*big.Int, error) {
-	argument := getCommandLineArgument(index)
-	key := new(big.Int)
-	file, err := os.Open(argument)
+func getFileReader(path string) (io.Reader, error) {
+	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-	var keyAscii []byte
-	if keyAscii, err = ioutil.ReadAll(file); err != nil {
-		return nil, err
-	}
-	keyString := string(keyAscii)
-	if key, ok := key.SetString(keyString, KeyBase); ok {
-		return key, nil
-	}
-	return nil, &formatError{keyString, KeyBase, "key", "integer"}
+	return file, nil
 }

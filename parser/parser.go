@@ -1,6 +1,9 @@
 package parser
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 func ParseArguments(parameters *Arguments) error {
 	var err error
@@ -10,20 +13,19 @@ func ParseArguments(parameters *Arguments) error {
 		switch argument {
 		case "-s":
 			parameters.KeySize, err = parseKeySize(&index)
-		case "-i":
-			parameters.Source = DataSource{IsStdin: true}
 		case "-k":
-			parameters.Key, err = parseKey(&index)
+			parameters.KeyInput.Reader = strings.NewReader(getCommandLineArgument(&index))
+			parameters.KeyInput.IsText = true
 		case "-kf":
-			parameters.Key, err = parseKeyFromFile(&index)
+			parameters.KeyInput.Reader, err = getFileReader(getCommandLineArgument(&index))
 		default:
 			if submatches := formatArgumentRegexp.FindStringSubmatch(argument); submatches != nil {
 				if submatches[2] == "i" {
-					parameters.IsInputDataText = submatches[3] == "d"
-					parameters.IsInputKeyText = submatches[3] == "k"
+					parameters.DataInput.IsText = submatches[3] == "d"
+					parameters.KeyInput.IsText = submatches[3] == "k"
 				} else {
-					parameters.IsOutputDataText = submatches[3] == "d"
-					parameters.IsOutputKeyText = submatches[3] == "k"
+					parameters.DataOutput.IsText = submatches[3] == "d"
+					parameters.KeyOutput.IsText = submatches[3] == "k"
 				}
 			}
 		}
