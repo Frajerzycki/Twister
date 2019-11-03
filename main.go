@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"github.com/Frajerzycki/GONSE"
 	"io/ioutil"
@@ -95,7 +96,7 @@ func main() {
 			return
 		}
 		if parameters.KeyOutput.IsText {
-			parameters.KeyOutput.Writer.Write([]byte(key.Text(parser.KeyBase) + "\n"))
+			parameters.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
 		}
 	case "-e":
 		var salt []byte
@@ -112,10 +113,17 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		bytes, _ := nse.Int64sToBytes(ciphertext)
+		bytes = append(bytes, nse.Int8sToBytes(IV)...)
+		buffer := make([]byte, 8)
+		binary.PutUvarint(buffer, uint64(len(data)))
+		bytes = append(bytes, buffer...)
+		bytes = append(bytes, salt...)
 		// Only for testing
 		if parameters.DataOutput.IsText {
-			bytes, _ := nse.Int64sToBytes(ciphertext)
-			fmt.Printf("\n%v\n", base64.StdEncoding.EncodeToString(bytes))
+			parameters.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
+		} else {
+			parameters.DataOutput.Writer.Write(bytes)
 		}
 	}
 
