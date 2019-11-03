@@ -65,6 +65,10 @@ func main() {
 	key := new(big.Int)
 	if doesRequireKey() {
 		data, err = ioutil.ReadAll(parameters.DataInput.Reader)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
 	if parameters.KeyInput.Reader != nil {
 		var keyBytes []byte
