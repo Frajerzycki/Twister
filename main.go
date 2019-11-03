@@ -97,6 +97,8 @@ func main() {
 		}
 		if arguments.KeyOutput.IsText {
 			arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
+		} else {
+			arguments.KeyOutput.Writer.Write(key.Bytes())
 		}
 	case "-e":
 		var salt []byte
