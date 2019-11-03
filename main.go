@@ -55,8 +55,8 @@ func main() {
 		return
 	}
 
-	parameters := parser.NewArguments()
-	err := parser.ParseArguments(&parameters)
+	arguments := parser.NewArguments()
+	err := parser.ParseArguments(&arguments)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -65,20 +65,20 @@ func main() {
 	var data []byte
 	key := new(big.Int)
 	if doesRequireKey() {
-		data, err = ioutil.ReadAll(parameters.DataInput.Reader)
+		data, err = ioutil.ReadAll(arguments.DataInput.Reader)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	}
-	if parameters.KeyInput.Reader != nil {
+	if arguments.KeyInput.Reader != nil {
 		var keyBytes []byte
-		keyBytes, err = ioutil.ReadAll(parameters.KeyInput.Reader)
+		keyBytes, err = ioutil.ReadAll(arguments.KeyInput.Reader)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		if parameters.KeyInput.IsText {
+		if arguments.KeyInput.IsText {
 			if lastIndex := len(keyBytes) - 1; keyBytes[lastIndex] == '\n' {
 				keyBytes = keyBytes[:lastIndex]
 			}
@@ -90,13 +90,13 @@ func main() {
 
 	switch os.Args[1] {
 	case "-g":
-		key, err = generateKey(parameters.KeySize)
+		key, err = generateKey(arguments.KeySize)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		if parameters.KeyOutput.IsText {
-			parameters.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
+		if arguments.KeyOutput.IsText {
+			arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
 		}
 	case "-e":
 		var salt []byte
@@ -120,10 +120,10 @@ func main() {
 		bytes = append(bytes, buffer...)
 		bytes = append(bytes, salt...)
 		// Only for testing
-		if parameters.DataOutput.IsText {
-			parameters.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
+		if arguments.DataOutput.IsText {
+			arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
 		} else {
-			parameters.DataOutput.Writer.Write(bytes)
+			arguments.DataOutput.Writer.Write(bytes)
 		}
 	}
 
