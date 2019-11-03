@@ -64,13 +64,6 @@ func main() {
 
 	var data []byte
 	key := new(big.Int)
-	if doesRequireKey() {
-		data, err = ioutil.ReadAll(arguments.DataInput.Reader)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
 	if arguments.KeyInput.Reader != nil {
 		var keyBytes []byte
 		keyBytes, err = ioutil.ReadAll(arguments.KeyInput.Reader)
@@ -85,6 +78,20 @@ func main() {
 			key.SetString(string(keyBytes), parser.KeyBase)
 		} else {
 			key.SetBytes(keyBytes)
+		}
+	} else {
+		key = nil
+	}
+
+	if doesRequireKey() {
+		if key == nil {
+			fmt.Printf("Key is not set but option %v requires it.\n", os.Args[1])
+			return
+		}
+		data, err = ioutil.ReadAll(arguments.DataInput.Reader)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
 	}
 
