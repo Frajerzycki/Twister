@@ -23,6 +23,6 @@ type Arguments struct {
 	KeySize    uint
 }
 
-func NewArguments() Arguments {
-	return Arguments{DataInput: &Input{Reader: os.Stdin}, DataOutput: &Output{Writer: os.Stdout}, KeyInput: &Input{}, KeyOutput: &Output{Writer: os.Stdout}, KeySize: uint(256)}
+func NewArguments() *Arguments {
+	return &Arguments{DataInput: &Input{Reader: os.Stdin}, DataOutput: &Output{Writer: os.Stdout}, KeyInput: &Input{}, KeyOutput: &Output{Writer: os.Stdout}, KeySize: uint(256)}
 }

@@ -25,10 +25,21 @@ func printUsage() {
 	os.Exit(1)
 }
 
-func generateKey(keySize uint) (*big.Int, error) {
+func generateKey(keySize uint, arguments *parser.Arguments) error {
 	max := big.NewInt(1)
 	max.Lsh(max, keySize)
-	return rand.Int(rand.Reader, max)
+
+	key, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		return err
+	}
+
+	if arguments.KeyOutput.IsBinary {
+		arguments.KeyOutput.Writer.Write(key.Bytes())
+	} else {
+		arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
+	}
+	return nil
 }
 
 func randomBytes(length int) ([]byte, error) {
@@ -49,6 +60,33 @@ func doesRequireKey() bool {
 	return os.Args[1] == "-e"
 }
 
+func encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
+	IV, err := nse.GenerateIV(len(data))
+	var salt []byte
+	salt, err = randomBytes(16)
+	if err != nil {
+		return err
+	}
+
+	ciphertext, err := nse.Encrypt(data, salt, IV, key)
+	if err != nil {
+		return err
+	}
+	bytes, _ := nse.Int64sToBytes(ciphertext)
+	bytes = append(bytes, nse.Int8sToBytes(IV)...)
+	buffer := make([]byte, 8)
+	binary.PutUvarint(buffer, uint64(len(data)))
+	bytes = append(bytes, buffer...)
+	bytes = append(bytes, salt...)
+	// Only for testing
+	if arguments.DataOutput.IsBinary {
+		arguments.DataOutput.Writer.Write(bytes)
+	} else {
+		arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
+	}
+	return nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -56,7 +94,7 @@ func main() {
 	}
 
 	arguments := parser.NewArguments()
-	err := parser.ParseArguments(&arguments)
+	err := parser.ParseArguments(arguments)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -101,43 +139,13 @@ func main() {
 
 	switch os.Args[1] {
 	case "-g":
-		key, err = generateKey(arguments.KeySize)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		if arguments.KeyOutput.IsBinary {
-			arguments.KeyOutput.Writer.Write(key.Bytes())
-		} else {
-			arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
-		}
+		err = generateKey(arguments.KeySize, arguments)
 	case "-e":
-		var salt []byte
-		var IV []int8
-		salt, err = randomBytes(16)
-		IV, err := nse.GenerateIV(len(data))
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		ciphertext, err := nse.Encrypt(data, salt, IV, key)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		bytes, _ := nse.Int64sToBytes(ciphertext)
-		bytes = append(bytes, nse.Int8sToBytes(IV)...)
-		buffer := make([]byte, 8)
-		binary.PutUvarint(buffer, uint64(len(data)))
-		bytes = append(bytes, buffer...)
-		bytes = append(bytes, salt...)
-		// Only for testing
-		if arguments.DataOutput.IsBinary {
-			arguments.DataOutput.Writer.Write(bytes)
-		} else {
-			arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
-		}
+		err = encrypt(data, key, arguments)
 	}
 
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
