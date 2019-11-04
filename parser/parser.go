@@ -8,6 +8,7 @@ import (
 func ParseArguments(arguments *Arguments) error {
 	var err error
 	var hasKeySizeBeenChanged bool
+	var hasDataReaderBeenChanged bool
 	var isKeyReadedFromFile bool
 	for index := 2; index < len(os.Args); index++ {
 		err = nil
@@ -30,6 +31,11 @@ func ParseArguments(arguments *Arguments) error {
 			}
 			arguments.KeyInput.Reader, err = getFileReader(getCommandLineArgument(&index))
 			isKeyReadedFromFile = true
+		case "-i":
+			if hasDataReaderBeenChanged {
+				return &manyParameterValuesError{"Data input"}
+			}
+			arguments.DataInput.Reader, err = getFileReader(getCommandLineArgument(&index))
 		default:
 			if submatches := formatArgumentRegexp.FindStringSubmatch(argument); submatches != nil {
 				err = parseFormatType(submatches, arguments)
