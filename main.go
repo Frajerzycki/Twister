@@ -20,7 +20,7 @@ func printUsage() {
 	fmt.Println("\t-s <size>\tSet desired size of key in bits to <size>, if not used size will be 256 bits")
 	//fmt.Println("\t-f <path>\tSet data to content of file placed in <path>")
 	fmt.Println("\t-k <key>\tSet key to <key>")
-	fmt.Println("\t-b[i|o][k|d]\tSet input/output key/data format to binary, if not used format will be text\n\t\t\tAbove parameter doesn't matter on input data for encryption, beacuse in that context there isn't any difference.")
+	fmt.Println("\t-b[i|o][k|d]\tSet input/output key/data format to binary, if not used format will be text\n\t\t\tAbove parameter doesn't matter on input data for encryption (-bid), beacuse in that context there isn't any difference.")
 	//fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
 	os.Exit(1)
 }
