@@ -72,5 +72,5 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	if !hasDataWriterBeenChanged && arguments.DataOutput.IsBinary {
 		return nil, binaryOutputError
 	}
-	return files, nil
+	return files[:filesIndex], nil
 }
