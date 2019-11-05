@@ -21,6 +21,7 @@ func printUsage() {
 	fmt.Println("\t-i <path>\tSet data to content of file placed in <path>")
 	fmt.Println("\t-k <key>\tSet key to <key>")
 	fmt.Println("\t-b[i|o][k|d]\tSet input/output key/data format to binary, if not used format will be text\n\t\t\tAbove parameter doesn't matter on input data for encryption (-bid), beacuse in that context there isn't any difference.")
+	fmt.Println("\t-o <path>\tRedirect output to file placed in <path>, if not used output will be STDOUT.")
 	fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
 	os.Exit(1)
 }
@@ -87,6 +88,12 @@ func encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	return nil
 }
 
+func closeFiles(files []*os.File) {
+	for _, v := range files {
+		v.Close()
+	}
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -94,11 +101,12 @@ func main() {
 	}
 
 	arguments := parser.NewArguments()
-	err := parser.ParseArguments(arguments)
+	files, err := parser.ParseArguments(arguments)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer closeFiles(files)
 
 	var data []byte
 	key := new(big.Int)
