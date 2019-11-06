@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Frajerzycki/Twister/parser"
 	"io/ioutil"
+	"log"
 	"math/big"
 	"os"
 )
@@ -25,6 +26,27 @@ func doesRequireKey() bool {
 	return os.Args[1] == "-e"
 }
 
+func getKey(arguments *parser.Arguments) (*big.Int, error) {
+	key := new(big.Int)
+	if arguments.KeyInput.Reader != nil {
+		keyBytes, err := ioutil.ReadAll(arguments.KeyInput.Reader)
+		if err != nil {
+			return nil, err
+		}
+		if arguments.KeyInput.IsBinary {
+			return key.SetBytes(keyBytes), nil
+		} else {
+			if lastIndex := len(keyBytes) - 1; keyBytes[lastIndex] == '\n' {
+				keyBytes = keyBytes[:lastIndex]
+			}
+			key.SetString(string(keyBytes), parser.KeyBase)
+			return key, nil
+		}
+
+	}
+	return nil, nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -34,45 +56,27 @@ func main() {
 	arguments := parser.NewArguments()
 	files, err := parser.ParseArguments(arguments)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalln(err)
 	}
 	defer closeFiles(files)
 
 	var data []byte
-	key := new(big.Int)
-	if arguments.KeyInput.Reader != nil {
-		var keyBytes []byte
-		keyBytes, err = ioutil.ReadAll(arguments.KeyInput.Reader)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		if arguments.KeyInput.IsBinary {
-			key.SetBytes(keyBytes)
-		} else {
-			if lastIndex := len(keyBytes) - 1; keyBytes[lastIndex] == '\n' {
-				keyBytes = keyBytes[:lastIndex]
-			}
-			key.SetString(string(keyBytes), parser.KeyBase)
-		}
-	} else {
-		key = nil
+	var key *big.Int
+	key, err = getKey(arguments)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	if doesRequireKey() {
 		if key == nil {
-			fmt.Printf("Key is not set but option %v requires it.\n", os.Args[1])
-			return
+			log.Fatalln(fmt.Sprintf("Key is not set but option %v requires it.\n", os.Args[1]))
 		}
 		data, err = ioutil.ReadAll(arguments.DataInput.Reader)
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatalln(err)
 		}
 		if len(data) == 0 {
-			fmt.Println("Data length has to be positive.")
-			return
+			log.Fatalln("Data length has to be positive.")
 		}
 	}
 
@@ -84,7 +88,6 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalln(err)
 	}
 }
