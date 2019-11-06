@@ -20,9 +20,9 @@ type Arguments struct {
 	DataOutput *Output
 	KeyInput   *Input
 	KeyOutput  *Output
-	KeySize    uint
+	KeySize    int
 }
 
 func NewArguments() *Arguments {
-	return &Arguments{DataInput: &Input{Reader: os.Stdin}, DataOutput: &Output{Writer: os.Stdout}, KeyInput: &Input{}, KeyOutput: &Output{Writer: os.Stdout}, KeySize: uint(256)}
+	return &Arguments{DataInput: &Input{Reader: os.Stdin}, DataOutput: &Output{Writer: os.Stdout}, KeyInput: &Input{}, KeyOutput: &Output{Writer: os.Stdout}, KeySize: 32}
 }

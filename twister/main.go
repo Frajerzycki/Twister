@@ -1,13 +1,8 @@
 package main
 
 import (
-	"./parser"
-	"bufio"
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/binary"
 	"fmt"
-	"github.com/Frajerzycki/GONSE"
+	"github.com/Frajerzycki/Twister/parser"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -17,7 +12,7 @@ func printUsage() {
 	fmt.Printf("Usage:\t%v -g [arguments]\tGenerate NSE secret key\n", os.Args[0])
 	fmt.Printf("or:\t%v -e [arguments]\tEncrypt data with NSE algorithm\n", os.Args[0])
 	fmt.Println("Arguments:")
-	fmt.Println("\t-s <size>\tSet desired size of key in bits to <size>, if not used size will be 256 bits")
+	fmt.Println("\t-s <size>\tSet desired size of key in bytes to <size>, if not used size will be 32 bytes")
 	fmt.Println("\t-i <path>\tSet data to content of file placed in <path>")
 	fmt.Println("\t-k <key>\tSet key to <key>")
 	fmt.Println("\t-b[i|o][k|d]\tSet input/output key/data format to binary, if not used format will be text\n\t\t\tAbove parameter doesn't matter on input data for encryption (-bid), beacuse in that context there isn't any difference.")
@@ -26,72 +21,8 @@ func printUsage() {
 	os.Exit(1)
 }
 
-func generateKey(keySize uint, arguments *parser.Arguments) error {
-	max := big.NewInt(1)
-	max.Lsh(max, keySize)
-
-	key, err := rand.Int(rand.Reader, max)
-	if err != nil {
-		return err
-	}
-
-	if arguments.KeyOutput.IsBinary {
-		arguments.KeyOutput.Writer.Write(key.Bytes())
-	} else {
-		arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
-	}
-	return nil
-}
-
-func randomBytes(length int) ([]byte, error) {
-	salt := make([]byte, length)
-	_, err := rand.Read(salt)
-	if err != nil {
-		return nil, err
-	}
-	return salt, nil
-}
-
-func getDataFromStd() ([]byte, error) {
-	reader := bufio.NewReader(os.Stdin)
-	return ioutil.ReadAll(reader)
-}
-
 func doesRequireKey() bool {
 	return os.Args[1] == "-e"
-}
-
-func encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
-	IV, err := nse.GenerateIV(len(data))
-	var salt []byte
-	salt, err = randomBytes(16)
-	if err != nil {
-		return err
-	}
-
-	ciphertext, err := nse.Encrypt(data, salt, IV, key)
-	if err != nil {
-		return err
-	}
-	bytes, _ := nse.Int64sToBytes(ciphertext)
-	bytes = append(bytes, nse.Int8sToBytes(IV)...)
-	buffer := make([]byte, 8)
-	binary.PutUvarint(buffer, uint64(len(data)))
-	bytes = append(bytes, buffer...)
-	bytes = append(bytes, salt...)
-	// Only for testing
-	if arguments.DataOutput.IsBinary {
-		arguments.DataOutput.Writer.Write(bytes)
-	} else {
-		arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
-	}
-	return nil
-}
-
-func closeFiles(files []*os.File) {
-	for _, v := range files {
-		v.Close()
-	}
 }
 
 func main() {
