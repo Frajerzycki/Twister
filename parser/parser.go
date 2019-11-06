@@ -11,6 +11,7 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	var hasKeySizeBeenChanged bool
 	var hasDataReaderBeenChanged bool
 	var hasDataWriterBeenChanged bool
+	var hasKeyWriterBeenChanged bool
 	var isKeyReadedFromFile bool
 	var file *os.File
 	files := make([]*os.File, 3)
@@ -49,14 +50,23 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 			filesIndex++
 			hasDataReaderBeenChanged = true
 		case "-o":
-			if hasDataWriterBeenChanged {
-				return nil, &manyParameterValuesError{"Data output"}
-			}
 			file, err = getFileWriter(getCommandLineArgument(&index))
-			arguments.DataOutput.Writer = file
 			files[filesIndex] = file
 			filesIndex++
-			hasDataWriterBeenChanged = true
+
+			if os.Args[1] == "-g" {
+				if hasKeyWriterBeenChanged {
+					return nil, &manyParameterValuesError{"Key output"}
+				}
+				arguments.KeyOutput.Writer = file
+				hasKeyWriterBeenChanged = true
+			} else {
+				if hasDataWriterBeenChanged {
+					return nil, &manyParameterValuesError{"Data output"}
+				}
+				arguments.DataOutput.Writer = file
+				hasDataWriterBeenChanged = true
+			}
 		default:
 			if submatches := formatArgumentRegexp.FindStringSubmatch(argument); submatches != nil {
 				err = parseFormatType(submatches, arguments)
