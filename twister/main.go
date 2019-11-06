@@ -69,14 +69,14 @@ func main() {
 
 	if doesRequireKey() {
 		if key == nil {
-			log.Fatalln(fmt.Sprintf("Key is not set but option %v requires it.\n", os.Args[1]))
+			log.Fatalf("Key is not set but option %v requires it.\n", os.Args[1])
 		}
 		data, err = ioutil.ReadAll(arguments.DataInput.Reader)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		if len(data) == 0 {
-			log.Fatalln("Data length has to be positive.")
+			log.Fatalln(notPositiveLengthError)
 		}
 	}
 

@@ -8,11 +8,11 @@ import (
 	"os"
 )
 
-var negativeLengthError error = errors.New("Length of any data musn't be negative.")
+var notPositiveLengthError error = errors.New("Length of data which exists has to be positive.")
 
 func randomBytes(length int) ([]byte, error) {
 	if length < 0 {
-		return nil, negativeLengthError
+		return nil, notPositiveLengthError
 	}
 	salt := make([]byte, length)
 	_, err := rand.Read(salt)
