@@ -3,11 +3,17 @@ package main
 import (
 	"bufio"
 	"crypto/rand"
+	"errors"
 	"io/ioutil"
 	"os"
 )
 
+var negativeLengthError error = errors.New("Length of any data musn't be negative.")
+
 func randomBytes(length int) ([]byte, error) {
+	if length < 0 {
+		return nil, negativeLengthError
+	}
 	salt := make([]byte, length)
 	_, err := rand.Read(salt)
 	if err != nil {
