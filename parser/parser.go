@@ -2,9 +2,12 @@ package parser
 
 import (
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+var formatArgumentRegexp *regexp.Regexp = regexp.MustCompile("(-b)([io])([kd])")
 
 func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	var err error
