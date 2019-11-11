@@ -30,7 +30,6 @@ func encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 		return err
 	}
 	bytes, _ := nse.Int64sToBytes(ciphertext)
-	fmt.Println(bytes)
 	encryptedToBytesLength := len(bytes)
 	bytes = append(bytes, nse.Int8sToBytes(IV)...)
 	buffer := make([]byte, 8)
@@ -62,10 +61,8 @@ func decrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	if toDecryptLength > uint64(len(ciphertext)) || toDecryptLength >= uint64(len(ciphertext)-saltSize-8) {
 		return wrongCiphertextFormatError
 	}
-	fmt.Println(ciphertext[:toDecryptLength])
 	toDecrypt, err := nse.BytesToInt64s(ciphertext[:toDecryptLength])
 	if err != nil {
-		//here
 		return err
 	}
 	IV := nse.BytesToInt8s(ciphertext[toDecryptLength : len(ciphertext)-saltSize-8])
