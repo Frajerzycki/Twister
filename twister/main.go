@@ -12,6 +12,7 @@ import (
 func printUsage() {
 	fmt.Printf("Usage:\t%v -g [arguments]\tGenerate NSE secret key\n", os.Args[0])
 	fmt.Printf("or:\t%v -e [arguments]\tEncrypt data with NSE algorithm\n", os.Args[0])
+	fmt.Printf("or:\t%v -d [arguments]\tDecrypt data with NSE algorithm\n", os.Args[0])
 	fmt.Println("Arguments:")
 	fmt.Println("\t-s <size>\tSet desired size of key in bytes to <size>, if not used size will be 32 bytes")
 	fmt.Println("\t-i <path>\tSet data to content of file placed in <path>")
@@ -23,12 +24,12 @@ func printUsage() {
 }
 
 func doesRequireKey() bool {
-	return os.Args[1] == "-e"
+	return os.Args[1] == "-e" || os.Args[1] == "-d"
 }
 
 // There might be in future some difference between doesRequireKey(), so for good practice it's separate function.
 func doesRequireData() bool {
-	return os.Args[1] == "-e"
+	return os.Args[1] == "-e" || os.Args[1] == "-d"
 }
 
 func getKey(arguments *parser.Arguments) (*big.Int, error) {
@@ -71,18 +72,19 @@ func main() {
 			log.Fatalf("Key is not set but option %v requires it.\n", os.Args[1])
 		}
 		key, err = getKey(arguments)
-
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	if doesRequireData() {
 		data, err = ioutil.ReadAll(arguments.DataInput.Reader)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		if len(data) == 0 {
 			log.Fatalln(notPositiveLengthError)
 		}
-	}
-
-	if err != nil {
-		log.Fatalln(err)
 	}
 
 	switch os.Args[1] {
@@ -90,6 +92,8 @@ func main() {
 		err = generateKey(arguments.KeySize, arguments)
 	case "-e":
 		err = encrypt(data, key, arguments)
+	case "-d":
+		err = decrypt(data, key, arguments)
 	}
 
 	if err != nil {
