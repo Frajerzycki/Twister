@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Frajerzycki/Twister/parser"
+	"github.com/frajerzycki/twister/internal/parser"
 	"io/ioutil"
 	"log"
 	"math/big"
