@@ -32,25 +32,6 @@ func doesRequireData() bool {
 	return os.Args[1] == "-e" || os.Args[1] == "-d"
 }
 
-func getKey(arguments *parser.Arguments) (*big.Int, error) {
-	key := new(big.Int)
-	keyBytes, err := ioutil.ReadAll(arguments.KeyInput.Reader)
-
-	switch {
-	case err != nil:
-		return nil, err
-	case arguments.KeyInput.IsBinary:
-		key.SetBytes(keyBytes)
-	default:
-		lastIndex := len(keyBytes) - 1
-		if keyBytes[lastIndex] == '\n' {
-			keyBytes = keyBytes[:lastIndex]
-		}
-		key.SetString(string(keyBytes), parser.KeyBase)
-	}
-	return key, nil
-}
-
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -71,7 +52,7 @@ func main() {
 		if arguments.KeyInput.Reader == nil {
 			log.Fatalf("Key is not set but option %v requires it.\n", os.Args[1])
 		}
-		key, err = getKey(arguments)
+		key, err = arguments.GetKey()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -89,7 +70,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "-g":
-		err = generateKey(arguments.KeySize, arguments)
+		err = generateKey(arguments)
 	case "-e":
 		err = encrypt(data, key, arguments)
 	case "-d":

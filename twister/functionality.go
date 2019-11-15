@@ -79,8 +79,8 @@ func decrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 
 }
 
-func generateKey(keySize int, arguments *parser.Arguments) error {
-	keyBytes, err := randomBytes(keySize)
+func generateKey(arguments *parser.Arguments) error {
+	keyBytes, err := randomBytes(arguments.KeySize)
 
 	if err != nil {
 		return err
