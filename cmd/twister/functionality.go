@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/frajerzycki/gonse"
-	"github.com/frajerzycki/twister/internal/parser"
+	"github.com/ikcilrep/gonse/pkg/nse"
+	"github.com/ikcilrep/twister/internal/parser"
 	"math/big"
 )
 
