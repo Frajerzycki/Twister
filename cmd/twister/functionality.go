@@ -29,7 +29,7 @@ func encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	if err != nil {
 		return err
 	}
-	bytes, _ := nse.Int64sToBytes(ciphertext)
+	bytes := nse.Int64sToBytes(ciphertext)
 	encryptedToBytesLength := len(bytes)
 	bytes = append(bytes, nse.Int8sToBytes(IV)...)
 	buffer := make([]byte, 8)

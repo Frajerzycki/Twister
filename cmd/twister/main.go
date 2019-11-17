@@ -63,9 +63,9 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		if len(data) == 0 {
-			log.Fatalln(notPositiveLengthError)
-		}
+		//		if len(data) == 0 {
+		//			log.Fatalln(notPositiveLengthError)
+		//		}
 	}
 
 	switch os.Args[1] {
