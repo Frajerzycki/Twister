@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"encoding/base64"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -39,7 +40,11 @@ func (arguments *Arguments) GetKey() (*big.Int, error) {
 		if keyBytes[lastIndex] == '\n' {
 			keyBytes = keyBytes[:lastIndex]
 		}
-		key.SetString(string(keyBytes), KeyBase)
+		decodedBytes, err := base64.StdEncoding.DecodeString(string(keyBytes))
+		if err != nil {
+			return nil, err
+		}
+		key.SetBytes(decodedBytes)
 	}
 	return key, nil
 }

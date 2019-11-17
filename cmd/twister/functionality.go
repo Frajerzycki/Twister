@@ -92,7 +92,7 @@ func generateKey(arguments *parser.Arguments) error {
 	if arguments.KeyOutput.IsBinary {
 		arguments.KeyOutput.Writer.Write(key.Bytes())
 	} else {
-		arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", key.Text(parser.KeyBase))))
+		arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(key.Bytes()))))
 	}
 	return nil
 }
