@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/ikcilrep/twister/internal/functionality"
 	"github.com/ikcilrep/twister/internal/parser"
 	"io/ioutil"
 	"log"
@@ -70,11 +71,11 @@ func main() {
 
 	switch os.Args[1] {
 	case "-g":
-		err = generateKey(arguments)
+		err = functionality.GenerateKey(arguments)
 	case "-e":
-		err = encrypt(data, key, arguments)
+		err = functionality.Encrypt(data, key, arguments)
 	case "-d":
-		err = decrypt(data, key, arguments)
+		err = functionality.Decrypt(data, key, arguments)
 	}
 
 	if err != nil {

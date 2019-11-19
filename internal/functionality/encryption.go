@@ -1,4 +1,4 @@
-package main
+package functionality
 
 import (
 	"encoding/base64"
@@ -14,7 +14,7 @@ const saltSize int = 16
 
 var wrongCiphertextFormatError error = errors.New("Wrong format of ciphertext given to encrypt.")
 
-func encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
+func Encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	IV, err := nse.GenerateIV(len(data))
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	return nil
 }
 
-func decrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
+func Decrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	var ciphertext []byte
 	var err error
 	if arguments.DataInput.IsBinary {
@@ -77,22 +77,4 @@ func decrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	}
 	return nil
 
-}
-
-func generateKey(arguments *parser.Arguments) error {
-	keyBytes, err := randomBytes(arguments.KeySize)
-
-	if err != nil {
-		return err
-	}
-
-	key := new(big.Int)
-	key.SetBytes(keyBytes)
-
-	if arguments.KeyOutput.IsBinary {
-		arguments.KeyOutput.Writer.Write(key.Bytes())
-	} else {
-		arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(key.Bytes()))))
-	}
-	return nil
 }
