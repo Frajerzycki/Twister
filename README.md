@@ -10,5 +10,6 @@ To install Twister you need to install golang first. The rest of this guide assu
 3. Be very happy.
 
 How to use Twister?
+===================
 
 If you have installed it according to the instruction, just type `twister` and see help usage of this program.
