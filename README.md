@@ -1,7 +1,7 @@
 How to install Twister?
 =======================
 
-To install Twister you need to install golang first. The rest of this guide assumes that you have already installed it and added $GOPATH to your $PATH.
+To install Twister you need to install golang first. The rest of this guide assumes that you have already installed it and added $GOPATH/bin to your $PATH.
 
 1. Download Twister.
 `go get github.com/ikcilrep/twister`
