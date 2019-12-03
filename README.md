@@ -8,3 +8,7 @@ To install Twister you need to install golang first. The rest of this guide assu
 2. Build Twister source.
 `go install github.com/ikcilrep/twister/cmd/twister`
 3. Be very happy.
+
+How to use Twister?
+
+If you have installed it according to the instruction, just type `twister` and see help usage of this program.
