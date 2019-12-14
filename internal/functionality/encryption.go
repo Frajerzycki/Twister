@@ -15,17 +15,13 @@ const saltSize int = 16
 var wrongCiphertextFormatError error = errors.New("Wrong format of ciphertext given to encrypt.")
 
 func Encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
-	IV, err := nse.GenerateIV(len(data))
-	if err != nil {
-		return err
-	}
 	var salt []byte
-	salt, err = randomBytes(saltSize)
+	salt, err := randomBytes(saltSize)
 	if err != nil {
 		return err
 	}
 
-	ciphertext, err := nse.Encrypt(data, salt, IV, key)
+	ciphertext, IV, err := nse.Encrypt(data, salt, key)
 	if err != nil {
 		return err
 	}
