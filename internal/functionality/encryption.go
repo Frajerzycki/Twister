@@ -16,7 +16,7 @@ const blockLength int = 32
 
 var wrongCiphertextFormatError error = errors.New("Wrong format of ciphertext given to encrypt.")
 
-func addRecoveryInfoToCiphertext(destiny *[]byte, ciphertext []int64, IV []int8) {
+func addRecoveryInfoToCiphertextBlock(destiny *[]byte, ciphertext []int64, IV []int8) {
 	ciphertextBytes := nse.Int64sToBytes(ciphertext)
 	ciphertextLengthBytes := nse.Int64ToBytes(int64(len(ciphertextBytes)))
 
@@ -50,7 +50,7 @@ func Encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 		if err != nil {
 			return err
 		}
-		addRecoveryInfoToCiphertext(&encryptedDataBlocks.Blocks[index], ciphertext, IV)
+		addRecoveryInfoToCiphertextBlock(&encryptedDataBlocks.Blocks[index], ciphertext, IV)
 	}
 	encryptedBytes := encryptedDataBlocks.ToByteArray()
 	encryptedBytes = append(encryptedBytes, salt...)
