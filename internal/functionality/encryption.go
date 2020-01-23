@@ -1,6 +1,7 @@
 package functionality
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
@@ -11,8 +12,20 @@ import (
 )
 
 const saltSize int = 16
+const blockLength int = 32
 
 var wrongCiphertextFormatError error = errors.New("Wrong format of ciphertext given to encrypt.")
+
+func addRecoveryInfoToCiphertext(destiny *[]byte, ciphertext []int64, IV []int8) {
+	ciphertextBytes := nse.Int64sToBytes(ciphertext)
+	ciphertextLengthBytes := nse.Int64ToBytes(int64(len(ciphertextBytes)))
+
+	*destiny = make([]byte, len(ciphertextBytes)+len(ciphertextLengthBytes)+len(IV))
+	copy(*destiny, ciphertextBytes)
+	copy((*destiny)[len(ciphertextBytes):], ciphertextLengthBytes)
+	copy((*destiny)[len(ciphertextBytes)+len(ciphertextLengthBytes):], nse.Int8sToBytes(IV))
+
+}
 
 func Encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 	var salt []byte
@@ -21,22 +34,31 @@ func Encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
 		return err
 	}
 
-	ciphertext, IV, err := nse.Encrypt(data, salt, key)
+	bitsToRotate, bytesToRotate, derivedKey, err := nse.DeriveKey(key, salt, len(data))
 	if err != nil {
 		return err
 	}
-	bytes := nse.Int64sToBytes(ciphertext)
-	encryptedToBytesLength := len(bytes)
-	bytes = append(bytes, nse.Int8sToBytes(IV)...)
-	buffer := make([]byte, 8)
-	binary.PutUvarint(buffer, uint64(encryptedToBytesLength))
-	bytes = append(bytes, buffer...)
-	bytes = append(bytes, salt...)
+
+	dataBlocks, err := ByteArrayToDataBlocks(data, blockLength, rand.Reader)
+	if err != nil {
+		return err
+	}
+	encryptedDataBlocks := DataBlocks{Blocks: make([][]byte, len(dataBlocks.Blocks)), Rest: 0}
+
+	for index, block := range dataBlocks.Blocks {
+		ciphertext, IV, err := nse.EncryptWithAlreadyDerivedKey(block, salt, derivedKey, bitsToRotate, bytesToRotate)
+		if err != nil {
+			return err
+		}
+		addRecoveryInfoToCiphertext(&encryptedDataBlocks.Blocks[index], ciphertext, IV)
+	}
+	encryptedBytes := encryptedDataBlocks.ToByteArray()
+	encryptedBytes = append(encryptedBytes, salt...)
 
 	if arguments.DataOutput.IsBinary {
-		arguments.DataOutput.Writer.Write(bytes)
+		arguments.DataOutput.Writer.Write(encryptedBytes)
 	} else {
-		arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(bytes))))
+		arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(encryptedBytes))))
 	}
 	return nil
 }
