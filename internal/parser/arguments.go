@@ -48,6 +48,15 @@ func (arguments *Arguments) GetKey() (*big.Int, error) {
 	}
 	return key, nil
 }
+
+func (arguments *Arguments) WriteToDataOutput(bytes []byte) {
+	if arguments.DataOutput.IsBinary {
+		arguments.DataOutput.Writer.Write(bytes)
+	} else {
+		io.WriteString(arguments.DataOutput.Writer, base64.StdEncoding.EncodeToString(bytes))
+	}
+}
+
 func NewArguments() *Arguments {
 	return &Arguments{DataInput: &Input{Reader: os.Stdin}, DataOutput: &Output{Writer: os.Stdout}, KeyInput: &Input{}, KeyOutput: &Output{Writer: os.Stdout}, KeySize: 32}
 }

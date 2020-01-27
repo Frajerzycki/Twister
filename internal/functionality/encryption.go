@@ -2,97 +2,52 @@ package functionality
 
 import (
 	"crypto/rand"
-	"encoding/base64"
-	"encoding/binary"
 	"errors"
-	"fmt"
 	"github.com/ikcilrep/gonse/pkg/nse"
 	"github.com/ikcilrep/twister/internal/parser"
+	"io"
 	"math/big"
 )
 
 const saltSize int = 16
-const blockLength byte = byte(32)
+const blockSize byte = byte(32)
 
 var wrongCiphertextFormatError error = errors.New("Wrong format of ciphertext given to encrypt.")
 
-// EncryptedBlock = ciphertext + cipherTextLength + IV + rest
-func addRecoveryInfoToCiphertextBlock(destiny *[]byte, ciphertext []int64, IV []int8, rest byte) {
+// EncryptedBlock = cipherTextLength + ciphertext + IV
+func writeCiphertextBlockWithRecoveryData(arguments *parser.Arguments, ciphertext []int64, IV []int8) {
 	ciphertextBytes := nse.Int64sToBytes(ciphertext)
 	ciphertextLengthBytes := nse.Int64ToBytes(int64(len(ciphertextBytes)))
-	*destiny = make([]byte, len(ciphertextBytes)+len(ciphertextLengthBytes)+len(IV)+1)
-	copy(*destiny, ciphertextBytes)
-	copy((*destiny)[len(ciphertextBytes):], ciphertextLengthBytes)
-	copy((*destiny)[len(ciphertextBytes)+len(ciphertextLengthBytes):], nse.Int8sToBytes(IV))
-	(*destiny)[len(*destiny)-1] = rest
+	arguments.WriteToDataOutput(ciphertextLengthBytes)
+	arguments.WriteToDataOutput(ciphertextBytes)
+	arguments.WriteToDataOutput(nse.Int8sToBytes(IV))
 }
 
-func Encrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
-	var salt []byte
-	salt, err := randomBytes(saltSize)
+func Encrypt(key *big.Int, arguments *parser.Arguments) error {
+	salt := make([]byte, saltSize)
+	_, err := io.ReadFull(rand.Reader, salt)
 	if err != nil {
 		return err
 	}
 
-	bitsToRotate, bytesToRotate, derivedKey, err := nse.DeriveKey(key, salt, len(data))
-	if err != nil {
-		return err
-	}
+	bitsToRotate, bytesToRotate, derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
 
-	dataBlocks, err := ByteArrayToDataBlocks(data, blockLength, rand.Reader)
-	if err != nil {
-		return err
-	}
-	encryptedDataBlocks := DataBlocks{Blocks: make([][]byte, len(dataBlocks.Blocks)), Rest: 0}
+	for err != nil {
+		var bytesRead int
+		block := make([]byte, blockSize)
+		bytesRead, err = io.ReadFull(arguments.DataInput.Reader, block)
+		if err != nil {
+			_, err := io.ReadFull(rand.Reader, block[bytesRead:])
+			if err != nil {
+				return err
+			}
+		}
 
-	for index, block := range dataBlocks.Blocks {
-		ciphertext, IV, err := nse.EncryptWithAlreadyDerivedKey(block, salt, derivedKey, bitsToRotate, bytesToRotate)
+		ciphertext, IV, err := nse.EncryptWithAlreadyDerivedKey(block, derivedKey, bitsToRotate, bytesToRotate)
 		if err != nil {
 			return err
 		}
-		addRecoveryInfoToCiphertextBlock(&encryptedDataBlocks.Blocks[index], ciphertext, IV, dataBlocks.Rest)
-	}
-	encryptedBytes := encryptedDataBlocks.ToByteArray()
-	encryptedBytes = append(encryptedBytes, salt...)
-
-	if arguments.DataOutput.IsBinary {
-		arguments.DataOutput.Writer.Write(encryptedBytes)
-	} else {
-		arguments.DataOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(encryptedBytes))))
+		writeCiphertextBlockWithRecoveryData(arguments, ciphertext, IV)
 	}
 	return nil
-}
-
-func Decrypt(data []byte, key *big.Int, arguments *parser.Arguments) error {
-	var ciphertext []byte
-	var err error
-	if arguments.DataInput.IsBinary {
-		ciphertext = data
-	} else {
-		ciphertext, err = base64.StdEncoding.DecodeString(string(data))
-		if err != nil {
-			return err
-		}
-	}
-	salt := ciphertext[len(ciphertext)-saltSize:]
-	toDecryptLength, _ := binary.Uvarint(ciphertext[len(ciphertext)-saltSize-8 : len(ciphertext)-saltSize])
-	if toDecryptLength > uint64(len(ciphertext)) || toDecryptLength >= uint64(len(ciphertext)-saltSize-8) {
-		return wrongCiphertextFormatError
-	}
-	toDecrypt, err := nse.BytesToInt64s(ciphertext[:toDecryptLength])
-	if err != nil {
-		return err
-	}
-	IV := nse.BytesToInt8s(ciphertext[toDecryptLength : len(ciphertext)-saltSize-8])
-	decrypted, err := nse.Decrypt(toDecrypt, salt, IV, key)
-	switch {
-	case err != nil:
-		return err
-	case arguments.DataOutput.IsBinary:
-		arguments.DataOutput.Writer.Write(decrypted)
-	default:
-		arguments.DataOutput.Writer.Write([]byte(string(decrypted)))
-	}
-	return nil
-
 }
