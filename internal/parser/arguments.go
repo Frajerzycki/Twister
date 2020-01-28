@@ -49,11 +49,17 @@ func (arguments *Arguments) GetKey() (*big.Int, error) {
 	return key, nil
 }
 
-func (arguments *Arguments) WriteToDataOutput(bytes []byte) {
+func (arguments *Arguments) WriteToDataOutput(data []byte) {
 	if arguments.DataOutput.IsBinary {
-		arguments.DataOutput.Writer.Write(bytes)
+		arguments.DataOutput.Writer.Write(data)
 	} else {
-		io.WriteString(arguments.DataOutput.Writer, base64.StdEncoding.EncodeToString(bytes))
+		io.WriteString(arguments.DataOutput.Writer, base64.StdEncoding.EncodeToString(data))
+	}
+}
+
+func (arguments *Arguments) WriteToNonBinaryDataOutput(data string) {
+	if !arguments.DataOutput.IsBinary {
+		io.WriteString(arguments.DataOutput.Writer, data)
 	}
 }
 

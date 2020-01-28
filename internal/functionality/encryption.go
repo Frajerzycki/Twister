@@ -23,6 +23,7 @@ func writeCiphertextBlockWithRecoveryData(arguments *parser.Arguments, ciphertex
 	arguments.WriteToDataOutput(nse.Int8sToBytes(IV))
 }
 
+// EncryptedData = salt + EncryptedBlocks
 func Encrypt(key *big.Int, arguments *parser.Arguments) error {
 	salt := make([]byte, saltSize)
 	_, err := io.ReadFull(rand.Reader, salt)
@@ -31,7 +32,7 @@ func Encrypt(key *big.Int, arguments *parser.Arguments) error {
 	}
 
 	bitsToRotate, bytesToRotate, derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
-
+	arguments.WriteToDataOutput(salt)
 	for err != nil {
 		var bytesRead int
 		block := make([]byte, blockSize)
@@ -49,5 +50,7 @@ func Encrypt(key *big.Int, arguments *parser.Arguments) error {
 		}
 		writeCiphertextBlockWithRecoveryData(arguments, ciphertext, IV)
 	}
+
+	arguments.WriteToNonBinaryDataOutput("\n")
 	return nil
 }

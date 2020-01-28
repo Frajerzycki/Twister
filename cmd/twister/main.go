@@ -46,7 +46,6 @@ func main() {
 	}
 	defer closeFiles(files)
 
-	var data []byte
 	var key *big.Int
 
 	if doesRequireKey() {
@@ -59,23 +58,13 @@ func main() {
 		}
 	}
 
-	if doesRequireData() {
-		data, err = ioutil.ReadAll(arguments.DataInput.Reader)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		//		if len(data) == 0 {
-		//			log.Fatalln(notPositiveLengthError)
-		//		}
-	}
-
 	switch os.Args[1] {
 	case "-g":
 		err = functionality.GenerateKey(arguments)
 	case "-e":
-		err = functionality.Encrypt(data, key, arguments)
+		err = functionality.Encrypt(key, arguments)
 	case "-d":
-		err = functionality.Decrypt(data, key, arguments)
+		err = functionality.Decrypt(key, arguments)
 	}
 
 	if err != nil {
