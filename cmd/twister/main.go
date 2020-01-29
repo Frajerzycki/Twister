@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ikcilrep/twister/internal/functionality"
 	"github.com/ikcilrep/twister/internal/parser"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"os"
@@ -18,7 +17,6 @@ func printUsage() {
 	fmt.Println("\t-s <size>\tSet desired size of key in bytes to <size>, if not used size will be 32 bytes")
 	fmt.Println("\t-i <path>\tSet data to content of file placed in <path>")
 	fmt.Println("\t-k <key>\tSet key to <key>")
-	fmt.Println("\t-b[i|o][k|d]\tSet input/output key/data format to binary, if not used format will be text\n\t\t\tAbove parameter doesn't matter on input data for encryption (-bid), beacuse in that context there isn't any difference.")
 	fmt.Println("\t-o <path>\tRedirect output to file placed in <path>, if not used output will be STDOUT.")
 	fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
 	os.Exit(1)
@@ -49,7 +47,7 @@ func main() {
 	var key *big.Int
 
 	if doesRequireKey() {
-		if arguments.KeyInput.Reader == nil {
+		if arguments.KeyReader == nil {
 			log.Fatalf("Key is not set but option %v requires it.\n", os.Args[1])
 		}
 		key, err = arguments.GetKey()

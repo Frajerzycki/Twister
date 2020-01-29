@@ -5,6 +5,6 @@ type TestingWriter struct {
 }
 
 func (testingWriter *TestingWriter) Write(p []byte) (int, error) {
-	testingWriter.data = p
+	testingWriter.data = append(testingWriter.data, p...)
 	return len(p), nil
 }

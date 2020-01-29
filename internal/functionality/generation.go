@@ -29,10 +29,7 @@ func GenerateKey(arguments *parser.Arguments) error {
 		return err
 	}
 
-	if arguments.KeyOutput.IsBinary {
-		arguments.KeyOutput.Writer.Write(keyBytes)
-	} else {
-		arguments.KeyOutput.Writer.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(keyBytes))))
-	}
-	return nil
+	_, err = arguments.KeyWriter.Write([]byte(fmt.Sprintf("%v\n", base64.StdEncoding.EncodeToString(keyBytes))))
+
+	return err
 }

@@ -15,7 +15,6 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	var hasDataReaderBeenChanged bool
 	var hasDataWriterBeenChanged bool
 	var hasKeyWriterBeenChanged bool
-	var isKeyReadedFromFile bool
 	var file *os.File
 	files := make([]*os.File, 3)
 	filesIndex := 0
@@ -30,25 +29,24 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 			arguments.KeySize, err = parseKeySize(&index)
 			hasKeySizeBeenChanged = true
 		case "-k":
-			if arguments.KeyInput.Reader != nil {
+			if arguments.KeyReader != nil {
 				return nil, &manyParameterValuesError{"Key"}
 			}
-			arguments.KeyInput.Reader = strings.NewReader(getCommandLineArgument(&index))
+			arguments.KeyReader = strings.NewReader(getCommandLineArgument(&index))
 		case "-kf":
-			if arguments.KeyInput.Reader != nil {
+			if arguments.KeyReader != nil {
 				return nil, &manyParameterValuesError{"Key"}
 			}
 			file, err = getFileReader(getCommandLineArgument(&index))
-			arguments.KeyInput.Reader = file
+			arguments.KeyReader = file
 			files[filesIndex] = file
 			filesIndex++
-			isKeyReadedFromFile = true
 		case "-i":
 			if hasDataReaderBeenChanged {
 				return nil, &manyParameterValuesError{"Data input"}
 			}
 			file, err = getFileReader(getCommandLineArgument(&index))
-			arguments.DataInput.Reader = file
+			arguments.DataReader = file
 			files[filesIndex] = file
 			filesIndex++
 			hasDataReaderBeenChanged = true
@@ -61,30 +59,19 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 				if hasKeyWriterBeenChanged {
 					return nil, &manyParameterValuesError{"Key output"}
 				}
-				arguments.KeyOutput.Writer = file
+				arguments.KeyWriter = file
 				hasKeyWriterBeenChanged = true
 			} else {
 				if hasDataWriterBeenChanged {
 					return nil, &manyParameterValuesError{"Data output"}
 				}
-				arguments.DataOutput.Writer = file
+				arguments.DataWriter = file
 				hasDataWriterBeenChanged = true
-			}
-		default:
-			if submatches := formatArgumentRegexp.FindStringSubmatch(argument); submatches != nil {
-				err = parseFormatType(submatches, arguments)
 			}
 		}
 		if err != nil {
 			return nil, err
 		}
-	}
-	if !isKeyReadedFromFile && arguments.KeyInput.IsBinary {
-		return nil, binaryInputError
-	}
-
-	if !hasDataWriterBeenChanged && arguments.DataOutput.IsBinary {
-		return nil, binaryOutputError
 	}
 	return files[:filesIndex], nil
 }
@@ -96,33 +83,4 @@ func parseKeySize(index *int) (int, error) {
 		return size, nil
 	}
 	return 0, err
-}
-
-func parseFormatType(submatches []string, arguments *Arguments) error {
-	if submatches[2] == "i" {
-		if submatches[3] == "d" {
-			if arguments.DataInput.IsBinary {
-				return &manyParameterValuesError{"Is input data binary"}
-			}
-			arguments.DataInput.IsBinary = true
-		} else {
-			if arguments.KeyInput.IsBinary {
-				return &manyParameterValuesError{"Is input key binary"}
-			}
-			arguments.KeyInput.IsBinary = true
-		}
-	} else {
-		if submatches[3] == "d" {
-			if arguments.DataOutput.IsBinary {
-				return &manyParameterValuesError{"Is output data binary"}
-			}
-			arguments.DataOutput.IsBinary = true
-		} else {
-			if arguments.KeyOutput.IsBinary {
-				return &manyParameterValuesError{"Is output key binary"}
-			}
-			arguments.KeyOutput.IsBinary = true
-		}
-	}
-	return nil
 }
