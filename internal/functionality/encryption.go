@@ -39,7 +39,7 @@ func Encrypt(key *big.Int, arguments *parser.Arguments) error {
 		return err
 	}
 
-	bitsToRotate, bytesToRotate, derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
+	derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func Encrypt(key *big.Int, arguments *parser.Arguments) error {
 			block[len(block)-1] = byte(rest)
 		}
 
-		encryptedBlock, IV, err1 := nse.EncryptWithAlreadyDerivedKey(block, derivedKey, bitsToRotate, bytesToRotate)
+		encryptedBlock, IV, err1 := nse.Encrypt(block, derivedKey)
 		if err1 != nil {
 			return err1
 		}
@@ -109,7 +109,7 @@ func Decrypt(key *big.Int, arguments *parser.Arguments) error {
 		return err
 	}
 
-	bitsToRotate, bytesToRotate, derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
+	derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func Decrypt(key *big.Int, arguments *parser.Arguments) error {
 			return err
 		}
 
-		block, err = nse.DecryptWithAlreadyDerivedKey(encryptedBlock, IV, derivedKey, bitsToRotate, bytesToRotate)
+		block, err = nse.Decrypt(encryptedBlock, IV, derivedKey)
 		if err != nil {
 			return err
 		}
