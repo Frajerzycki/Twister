@@ -9,7 +9,7 @@ import (
 )
 
 const saltSize int = 16
-const blockSize byte = byte(32)
+const blockSize byte = byte(255)
 
 func writeEncryptedBlockWithRecoveryData(writer io.Writer, encryptedBlock []int64, IV []int8) error {
 	encryptedBlockBytes := nse.Int64sToBytes(encryptedBlock)
