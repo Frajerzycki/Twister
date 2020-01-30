@@ -15,10 +15,10 @@ func printUsage() {
 	fmt.Printf("or:\t%v -d [arguments]\tDecrypt data with NSE algorithm\n", os.Args[0])
 	fmt.Println("Arguments:")
 	fmt.Println("\t-s <size>\tSet desired size of key in bytes to <size>, if not used size will be 32 bytes")
-	fmt.Println("\t-i <path>\tSet data to content of file placed in <path>")
-	fmt.Println("\t-k <key>\tSet key to <key>")
+	fmt.Println("\t-i <path>\tSet data to the content of file placed in <path>")
+	fmt.Println("\t-k <key>\tSet key to the integer decoded from <key>")
 	fmt.Println("\t-o <path>\tRedirect output to file placed in <path>, if not used output will be STDOUT.")
-	fmt.Println("\t-kf <path>\tSet key to integer parsed from content of file placed in <path>")
+	fmt.Println("\t-kf <path>\tSet key to the integer decoded from content of the file placed in <path>")
 	os.Exit(1)
 }
 
