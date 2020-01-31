@@ -2,10 +2,10 @@ package parser
 
 import (
 	"encoding/base64"
+	"errors"
 	"io"
 	"io/ioutil"
 	"math/big"
-	"os"
 )
 
 type Arguments struct {
@@ -37,6 +37,27 @@ func (arguments *Arguments) GetKey() (*big.Int, error) {
 	return key, nil
 }
 
+func (arguments *Arguments) VerifyForNSETransformation() error {
+	if arguments.DataWriter == nil {
+		return errors.New("Output is not set.")
+	}
+	if arguments.DataReader == nil {
+		return errors.New("Input is not set.")
+	}
+
+	if arguments.KeyReader == nil {
+		return errors.New("Key is not set.")
+	}
+	return nil
+}
+
+func (arguments *Arguments) VerifyForKeyGeneration() error {
+	if arguments.KeyWriter == nil {
+		return errors.New("Output is not set.")
+	}
+	return nil
+}
+
 func NewArguments() *Arguments {
-	return &Arguments{DataReader: os.Stdin, DataWriter: os.Stdout, KeyWriter: os.Stdout, KeySize: 32}
+	return &Arguments{KeySize: 32}
 }

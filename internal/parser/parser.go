@@ -2,12 +2,8 @@ package parser
 
 import (
 	"os"
-	"regexp"
 	"strconv"
-	"strings"
 )
-
-var formatArgumentRegexp *regexp.Regexp = regexp.MustCompile("(-b)([io])([kd])")
 
 func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	var err error
@@ -29,11 +25,6 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 			arguments.KeySize, err = parseKeySize(&index)
 			hasKeySizeBeenChanged = true
 		case "-k":
-			if arguments.KeyReader != nil {
-				return nil, &manyParameterValuesError{"Key"}
-			}
-			arguments.KeyReader = strings.NewReader(getCommandLineArgument(&index))
-		case "-kf":
 			if arguments.KeyReader != nil {
 				return nil, &manyParameterValuesError{"Key"}
 			}
