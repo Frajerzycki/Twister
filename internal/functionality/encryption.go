@@ -11,129 +11,141 @@ import (
 const saltSize int = 16
 const blockSize byte = byte(255)
 
-func writeEncryptedBlockWithRecoveryData(writer io.Writer, encryptedBlock []int64, IV []int8) error {
+func writeEncryptedBlockWithRecoveryData(writer io.Writer, encryptedBlock []int64, IV []int8) (int, error) {
 	encryptedBlockBytes := nse.Int64sToBytes(encryptedBlock)
 	encryptedBlockLengthBytes := nse.Int64ToBytes(int64(len(encryptedBlockBytes)))
 
-	_, err := writer.Write(encryptedBlockLengthBytes)
+	bytesWritten1, err := writer.Write(encryptedBlockLengthBytes)
 	if err != nil {
-		return err
+		return bytesWritten1, err
 	}
 
-	_, err = writer.Write(encryptedBlockBytes)
+	bytesWritten2, err := writer.Write(encryptedBlockBytes)
 	if err != nil {
-		return err
+		return bytesWritten1 + bytesWritten2, err
 	}
 
-	_, err = writer.Write(nse.Int8sToBytes(IV))
+	bytesWritten3, err := writer.Write(nse.Int8sToBytes(IV))
 	if err != nil {
-		return err
+		return bytesWritten1 + bytesWritten2 + bytesWritten3, err
 	}
-	return nil
+	return bytesWritten1 + bytesWritten2 + bytesWritten3, nil
 }
 
-func Encrypt(key *big.Int, arguments *parser.Arguments) error {
+func Encrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesWritten int64, err error) {
 	salt := make([]byte, saltSize)
-	_, err := io.ReadFull(rand.Reader, salt)
+	_, err = io.ReadFull(rand.Reader, salt)
 	if err != nil {
-		return err
+		return int64(0), int64(0), err
 	}
 
 	derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
 	if err != nil {
-		return err
+		return int64(0), int64(0), err
 	}
 
-	_, err = arguments.DataWriter.Write(salt)
+	saltBytesWritten, err := arguments.DataWriter.Write(salt)
 	if err != nil {
-		return err
+		return int64(0), int64(saltBytesWritten), err
 	}
-
+	bytesRead = int64(0)
+	bytesWritten = int64(saltSize)
 	for err == nil {
-		var bytesRead int
+		var bytesRead1 int
 		block := make([]byte, blockSize)
-		bytesRead, err = io.ReadFull(arguments.DataReader, block)
+		bytesRead1, err = io.ReadFull(arguments.DataReader, block)
+		bytesRead += int64(bytesRead1)
 		if err != nil {
-			rest, err1 := io.ReadFull(rand.Reader, block[bytesRead:])
+			rest, err1 := io.ReadFull(rand.Reader, block[bytesRead1:])
 			if err1 != nil {
-				return err1
+				return bytesRead, bytesWritten, err1
 			}
 			block[len(block)-1] = byte(rest)
 		}
 
 		encryptedBlock, IV, err1 := nse.Encrypt(block, derivedKey)
 		if err1 != nil {
-			return err1
+			return bytesRead, bytesWritten, err1
 		}
 
-		err1 = writeEncryptedBlockWithRecoveryData(arguments.DataWriter, encryptedBlock, IV)
+		bytesWritten1, err1 := writeEncryptedBlockWithRecoveryData(arguments.DataWriter, encryptedBlock, IV)
+		bytesWritten += int64(bytesWritten1)
 		if err1 != nil {
-			return err1
+			return bytesRead, bytesWritten, err1
 		}
+
 	}
-	return nil
+	err = nil
+	return
 }
 
-func retrieveDataFromReader(reader io.Reader) (encryptedBlock []int64, IV []int8, err error) {
-	encryptedBlockBytesLength, _, err := nse.BytesToInt64FromReader(reader)
+func retrieveDataFromReader(reader io.Reader) (encryptedBlock []int64, IV []int8, bytesRead int, err error) {
+	encryptedBlockBytesLength, bytesRead1, err := nse.BytesToInt64FromReader(reader)
+	bytesRead += bytesRead1
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, bytesRead, err
 	}
 
 	encryptedBlockBytes := make([]byte, int(encryptedBlockBytesLength))
-	_, err = io.ReadFull(reader, encryptedBlockBytes)
+	bytesRead1, err = io.ReadFull(reader, encryptedBlockBytes)
+	bytesRead += bytesRead1
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, bytesRead, err
 	}
 
 	encryptedBlock, err = nse.BytesToInt64s(encryptedBlockBytes)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, bytesRead, err
 	}
 
 	IVBytes := make([]byte, int(blockSize))
-	_, err = io.ReadFull(reader, IVBytes)
+	bytesRead1, err = io.ReadFull(reader, IVBytes)
+	bytesRead += bytesRead1
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, bytesRead, err
 	}
 
 	IV = nse.BytesToInt8s(IVBytes)
-
 	return
 }
 
-func Decrypt(key *big.Int, arguments *parser.Arguments) error {
+func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesWritten int64, err error) {
 	salt := make([]byte, saltSize)
-	_, err := io.ReadFull(arguments.DataReader, salt)
+	saltBytesRead, err := io.ReadFull(arguments.DataReader, salt)
 	if err != nil {
-		return err
+		return int64(saltBytesRead), int64(0), err
 	}
 
 	derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
 	if err != nil {
-		return err
+		return int64(saltSize), int64(0), err
 	}
 	var block []byte
+	bytesRead = int64(saltSize)
+	bytesWritten = int64(0)
 	for {
-		encryptedBlock, IV, err := retrieveDataFromReader(arguments.DataReader)
+		encryptedBlock, IV, bytesRead1, err := retrieveDataFromReader(arguments.DataReader)
+		bytesRead += int64(bytesRead1)
 		if err != nil {
 			rest := int(block[len(block)-1])
 			_, err = arguments.DataWriter.Write(block[:len(block)-rest])
 			if err != nil {
-				return err
+				return bytesRead, bytesWritten, err
 			}
 			break
 		}
 
-		_, err = arguments.DataWriter.Write(block)
+		bytesWritten1, err := arguments.DataWriter.Write(block)
+		bytesWritten += int64(bytesWritten1)
 		if err != nil {
-			return err
+			return bytesRead, bytesWritten, err
 		}
 
 		block, err = nse.Decrypt(encryptedBlock, IV, derivedKey)
 		if err != nil {
-			return err
+			return bytesRead, bytesWritten, err
 		}
 	}
-	return nil
+	err = nil
+	return
 }

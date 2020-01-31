@@ -52,6 +52,7 @@ func main() {
 		}
 	}
 
+	var bytesRead, bytesWritten int64
 	switch os.Args[1] {
 	case "-g":
 		err = arguments.VerifyForKeyGeneration()
@@ -60,13 +61,21 @@ func main() {
 		}
 
 		err = functionality.GenerateKey(arguments)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return
 	case "-e":
-		err = functionality.Encrypt(key, arguments)
+		bytesRead, bytesWritten, err = functionality.Encrypt(key, arguments)
 	case "-d":
-		err = functionality.Decrypt(key, arguments)
+		bytesRead, bytesWritten, err = functionality.Decrypt(key, arguments)
 	}
 
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	fmt.Printf("%v bytes have been read.\n", bytesRead)
+	fmt.Printf("%v bytes have been written.\n", bytesWritten)
+
 }
