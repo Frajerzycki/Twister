@@ -133,18 +133,20 @@ func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesW
 	bytesRead = int64(saltSize)
 	bytesWritten = int64(0)
 	for {
+		var bytesWritten1 int
 		encryptedBlock, IV, bytesRead1, err := retrieveDataFromReader(arguments.DataReader)
 		bytesRead += int64(bytesRead1)
 		if err != nil {
 			rest := int(block[len(block)-1])
-			_, err = arguments.DataWriter.Write(block[:len(block)-rest])
+			bytesWritten1, err = arguments.DataWriter.Write(block[:len(block)-rest])
+			bytesWritten += int64(bytesWritten1)
 			if err != nil {
 				return bytesRead, bytesWritten, err
 			}
 			break
 		}
 
-		bytesWritten1, err := arguments.DataWriter.Write(block)
+		bytesWritten1, err = arguments.DataWriter.Write(block)
 		bytesWritten += int64(bytesWritten1)
 		if err != nil {
 			return bytesRead, bytesWritten, err
