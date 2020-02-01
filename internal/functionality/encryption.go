@@ -118,6 +118,36 @@ func retrieveDataFromReader(reader io.Reader) (encryptedBlock []int64, IV []int8
 	return
 }
 
+func decryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey, lastBlock []byte) (bytesRead int, bytesWritten int, block []byte, shouldContinue bool, err error) {
+	var bytesWritten1 int
+	encryptedBlock, IV, bytesRead, err := retrieveDataFromReader(arguments.DataReader)
+	shouldContinue = false
+	if err != nil {
+		rest := int(lastBlock[len(lastBlock)-1])
+		bytesWritten1, err = arguments.DataWriter.Write(lastBlock[:len(lastBlock)-rest])
+		bytesWritten += bytesWritten1
+		if err != nil {
+			return
+		}
+		return
+	}
+
+	shouldContinue = true
+
+	bytesWritten1, err = arguments.DataWriter.Write(lastBlock)
+	bytesWritten += bytesWritten1
+	if err != nil {
+		return
+	}
+
+	block, err = nse.Decrypt(encryptedBlock, IV, derivedKey)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesWritten int64, err error) {
 	salt := make([]byte, saltSize)
 	saltBytesRead, err := io.ReadFull(arguments.DataReader, salt)
@@ -130,33 +160,19 @@ func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesW
 		return int64(saltSize), int64(0), err
 	}
 	var block []byte
+	shouldContinue := true
 	bytesRead = int64(saltSize)
 	bytesWritten = int64(0)
-	for {
-		var bytesWritten1 int
-		encryptedBlock, IV, bytesRead1, err := retrieveDataFromReader(arguments.DataReader)
-		bytesRead += int64(bytesRead1)
-		if err != nil {
-			rest := int(block[len(block)-1])
-			bytesWritten1, err = arguments.DataWriter.Write(block[:len(block)-rest])
-			bytesWritten += int64(bytesWritten1)
-			if err != nil {
-				return bytesRead, bytesWritten, err
-			}
-			break
-		}
 
-		bytesWritten1, err = arguments.DataWriter.Write(block)
+	for shouldContinue {
+		var bytesRead1, bytesWritten1 int
+
+		bytesRead1, bytesWritten1, block, shouldContinue, err = decryptBlock(arguments, derivedKey, block)
+		bytesRead += int64(bytesRead1)
 		bytesWritten += int64(bytesWritten1)
 		if err != nil {
 			return bytesRead, bytesWritten, err
 		}
-
-		block, err = nse.Decrypt(encryptedBlock, IV, derivedKey)
-		if err != nil {
-			return bytesRead, bytesWritten, err
-		}
 	}
-	err = nil
 	return
 }
