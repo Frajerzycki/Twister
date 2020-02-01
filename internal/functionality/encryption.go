@@ -9,7 +9,7 @@ import (
 )
 
 const saltSize int = 16
-const blockSize byte = byte(255)
+const blockSize int = 256
 
 func writeEncryptedBlockWithRecoveryData(writer io.Writer, encryptedBlock []int64, IV []int8) (int, error) {
 	encryptedBlockBytes := nse.Int64sToBytes(encryptedBlock)
@@ -39,7 +39,7 @@ func Encrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesW
 		return int64(0), int64(0), err
 	}
 
-	derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
+	derivedKey, err := nse.DeriveKey(key, salt, blockSize)
 	if err != nil {
 		return int64(0), int64(0), err
 	}
@@ -98,7 +98,7 @@ func retrieveDataFromReader(reader io.Reader) (encryptedBlock []int64, IV []int8
 		return nil, nil, bytesRead, err
 	}
 
-	IVBytes := make([]byte, int(blockSize))
+	IVBytes := make([]byte, blockSize)
 	bytesRead1, err = io.ReadFull(reader, IVBytes)
 	bytesRead += bytesRead1
 	if err != nil {
@@ -116,7 +116,7 @@ func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesW
 		return int64(saltBytesRead), int64(0), err
 	}
 
-	derivedKey, err := nse.DeriveKey(key, salt, int(blockSize))
+	derivedKey, err := nse.DeriveKey(key, salt, blockSize)
 	if err != nil {
 		return int64(saltSize), int64(0), err
 	}
