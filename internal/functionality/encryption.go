@@ -50,39 +50,48 @@ func Encrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesW
 	}
 	bytesRead = int64(0)
 	bytesWritten = int64(saltSize)
-	for err == nil {
+	shouldContinue := true
+	for shouldContinue {
 		var bytesRead1, bytesWritten1 int
-		var err1 error
-		bytesRead1, bytesWritten1, err, err1 = encryptBlock(arguments, derivedKey)
+		bytesRead1, bytesWritten1, shouldContinue, err = encryptBlock(arguments, derivedKey)
 		bytesRead += int64(bytesRead1)
 		bytesWritten += int64(bytesWritten1)
-		if err1 != nil {
-			return bytesRead, bytesWritten, err1
+		if err != nil {
+			return bytesRead, bytesWritten, err
 		}
 	}
-	err = nil
 	return
 }
 
-func encryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey) (bytesRead int, bytesWritten int, err error, err1 error) {
+func pad(block []byte, filledBytes, blockSize int) error {
+	var rest int
+	rest, err := io.ReadFull(rand.Reader, block[filledBytes:])
+	if err != nil {
+		return err
+	}
+	block[len(block)-1] = byte(rest)
+	return nil
+}
+
+func encryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey) (bytesRead int, bytesWritten int, shouldContinue bool, err error) {
 	block := make([]byte, blockSize)
 	bytesRead, err = io.ReadFull(arguments.DataReader, block)
+	shouldContinue = true
 	if err != nil {
-		var rest int
-		rest, err1 = io.ReadFull(rand.Reader, block[bytesRead:])
-		if err1 != nil {
+		shouldContinue = false
+		err = pad(block, bytesRead, blockSize)
+		if err != nil {
 			return
 		}
-		block[len(block)-1] = byte(rest)
 	}
 
-	encryptedBlock, IV, err1 := nse.Encrypt(block, derivedKey)
-	if err1 != nil {
+	encryptedBlock, IV, err := nse.Encrypt(block, derivedKey)
+	if err != nil {
 		return
 	}
 
-	bytesWritten, err1 = writeEncryptedBlockWithRecoveryData(arguments.DataWriter, encryptedBlock, IV)
-	if err1 != nil {
+	bytesWritten, err = writeEncryptedBlockWithRecoveryData(arguments.DataWriter, encryptedBlock, IV)
+	if err != nil {
 		return
 	}
 	return
@@ -118,21 +127,26 @@ func retrieveDataFromReader(reader io.Reader) (encryptedBlock []int64, IV []int8
 	return
 }
 
+func unpad(block []byte, blockSize int) []byte {
+	rest := int(block[len(block)-1])
+	return block[:len(block)-rest]
+}
+
 func decryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey, lastBlock []byte) (bytesRead int, bytesWritten int, block []byte, shouldContinue bool, err error) {
 	var bytesWritten1 int
 	encryptedBlock, IV, bytesRead, err := retrieveDataFromReader(arguments.DataReader)
-	shouldContinue = false
+
+	shouldContinue = true
 	if err != nil {
-		rest := int(lastBlock[len(lastBlock)-1])
-		bytesWritten1, err = arguments.DataWriter.Write(lastBlock[:len(lastBlock)-rest])
+		shouldContinue = false
+		unpaddedLastBlock := unpad(lastBlock, blockSize)
+		bytesWritten1, err = arguments.DataWriter.Write(unpaddedLastBlock)
 		bytesWritten += bytesWritten1
 		if err != nil {
 			return
 		}
 		return
 	}
-
-	shouldContinue = true
 
 	bytesWritten1, err = arguments.DataWriter.Write(lastBlock)
 	bytesWritten += bytesWritten1
