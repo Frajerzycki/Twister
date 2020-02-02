@@ -1,9 +1,12 @@
 package parser
 
 import (
+	"github.com/ikcilrep/twister/internal/files"
 	"os"
 	"strconv"
 )
+
+const chunkSize int = 1048576
 
 func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	var err error
@@ -12,8 +15,8 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	var hasDataWriterBeenChanged bool
 	var hasKeyWriterBeenChanged bool
 	var file *os.File
-	files := make([]*os.File, 3)
-	filesIndex := 0
+	openedFiles := make([]*os.File, 3)
+	openedFilesIndex := 0
 	for index := 2; index < len(os.Args); index++ {
 		err = nil
 		argument := os.Args[index]
@@ -30,21 +33,24 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 			}
 			file, err = getFileReader(getCommandLineArgument(&index))
 			arguments.KeyReader = file
-			files[filesIndex] = file
-			filesIndex++
+			openedFiles[openedFilesIndex] = file
+			openedFilesIndex++
 		case "-i":
 			if hasDataReaderBeenChanged {
 				return nil, &manyParameterValuesError{"Data input"}
 			}
 			file, err = getFileReader(getCommandLineArgument(&index))
-			arguments.DataReader = file
-			files[filesIndex] = file
-			filesIndex++
+			arguments.DataReader, err = files.NewChunkedReader(file, chunkSize)
+			if err != nil {
+				return nil, err
+			}
+			openedFiles[openedFilesIndex] = file
+			openedFilesIndex++
 			hasDataReaderBeenChanged = true
 		case "-o":
 			file, err = getFileWriter(getCommandLineArgument(&index))
-			files[filesIndex] = file
-			filesIndex++
+			openedFiles[openedFilesIndex] = file
+			openedFilesIndex++
 
 			if os.Args[1] == "-g" {
 				if hasKeyWriterBeenChanged {
@@ -64,7 +70,7 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 			return nil, err
 		}
 	}
-	return files[:filesIndex], nil
+	return openedFiles[:openedFilesIndex], nil
 }
 
 func parseKeySize(index *int) (int, error) {
