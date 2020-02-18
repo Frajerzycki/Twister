@@ -13,7 +13,7 @@ func Test_functionality_Encrypt(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	keySize := 32
 	arguments := &parser.Arguments{KeySize: keySize}
-	keyReaderWriter := new(bytes.Buffer)
+	keyReaderWriter := NewTestBuffer()
 	arguments.KeyWriter = keyReaderWriter
 	arguments.KeyReader = keyReaderWriter
 	functionality.GenerateKey(arguments)
@@ -26,13 +26,13 @@ func Test_functionality_Encrypt(t *testing.T) {
 		data := make([]byte, dataLength)
 		rand.Read(data)
 		arguments.DataReader = bytes.NewReader(data)
-		buffer1 := new(bytes.Buffer)
+		buffer1 := NewTestBuffer()
 		arguments.DataWriter = buffer1
 
 		functionality.Encrypt(key, arguments)
 
 		arguments.DataReader = buffer1
-		buffer2 := new(bytes.Buffer)
+		buffer2 := NewTestBuffer()
 		arguments.DataWriter = buffer2
 
 		functionality.Decrypt(key, arguments)

@@ -9,7 +9,7 @@ import (
 )
 
 type Arguments struct {
-	DataWriter io.Writer
+	DataWriter io.WriteCloser
 	DataReader io.Reader
 	KeyWriter  io.Writer
 	KeyReader  io.Reader

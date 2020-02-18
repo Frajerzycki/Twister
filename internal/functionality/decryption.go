@@ -98,5 +98,6 @@ func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesW
 			return bytesRead, bytesWritten, err
 		}
 	}
+	err = arguments.DataWriter.Close()
 	return
 }

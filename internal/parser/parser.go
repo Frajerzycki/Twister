@@ -62,7 +62,10 @@ func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 				if hasDataWriterBeenChanged {
 					return nil, &manyParameterValuesError{"Data output"}
 				}
-				arguments.DataWriter = file
+				arguments.DataWriter, err = files.NewChunkedWriter(file, chunkSize)
+				if err != nil {
+					return nil, err
+				}
 				hasDataWriterBeenChanged = true
 			}
 		}
