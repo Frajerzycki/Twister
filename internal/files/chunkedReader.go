@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+// ChunkedReader reads from Reader in chunks, but use as much data as needed.
 type ChunkedReader struct {
 	chunkSize         int
 	chunk             []byte
@@ -13,6 +14,7 @@ type ChunkedReader struct {
 	Reader            io.Reader
 }
 
+// NewChunkedReader creates new ChunkedReader.
 func NewChunkedReader(reader io.Reader, chunkSize int) (*ChunkedReader, error) {
 	if chunkSize < 1 {
 		return nil, errors.New("Chunk size has to be positive.")

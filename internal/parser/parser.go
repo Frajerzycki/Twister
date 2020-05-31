@@ -8,6 +8,7 @@ import (
 
 const chunkSize int = 1048576
 
+// ParseArguments parses arguments into Arguments struct.
 func ParseArguments(arguments *Arguments) ([]*os.File, error) {
 	var err error
 	var hasKeySizeBeenChanged bool

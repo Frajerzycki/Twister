@@ -16,7 +16,11 @@ func Test_functionality_Encrypt(t *testing.T) {
 	keyReaderWriter := NewTestBuffer()
 	arguments.KeyWriter = keyReaderWriter
 	arguments.KeyReader = keyReaderWriter
-	functionality.GenerateKey(arguments)
+	err := functionality.GenerateKey(arguments)
+	if err != nil {
+		t.Error(err)
+	}
+
 	key, err := arguments.GetKey()
 	if err != nil {
 		t.Error(err)
@@ -29,13 +33,19 @@ func Test_functionality_Encrypt(t *testing.T) {
 		buffer1 := NewTestBuffer()
 		arguments.DataWriter = buffer1
 
-		functionality.Encrypt(key, arguments)
+		_, _, err = functionality.Encrypt(key, arguments)
+		if err != nil {
+			t.Error(err)
+		}
 
 		arguments.DataReader = buffer1
 		buffer2 := NewTestBuffer()
 		arguments.DataWriter = buffer2
 
-		functionality.Decrypt(key, arguments)
+		_, _, err = functionality.Decrypt(key, arguments)
+		if err != nil {
+			t.Error(err)
+		}
 		decryptedData := buffer2.Bytes()
 
 		if !bytes.Equal(data, decryptedData) {

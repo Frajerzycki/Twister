@@ -8,6 +8,7 @@ import (
 	"math/big"
 )
 
+// Arguments represents arguments of Twister.
 type Arguments struct {
 	DataWriter io.WriteCloser
 	DataReader io.Reader
@@ -16,6 +17,7 @@ type Arguments struct {
 	KeySize    int
 }
 
+// GetKey reads and returns secret key.
 func (arguments *Arguments) GetKey() (*big.Int, error) {
 	key := new(big.Int)
 	keyBytes, err := ioutil.ReadAll(arguments.KeyReader)
@@ -37,6 +39,7 @@ func (arguments *Arguments) GetKey() (*big.Int, error) {
 	return key, nil
 }
 
+// VerifyForNSETransformation verifies whether correct arguments are used for encryption or decryption.
 func (arguments *Arguments) VerifyForNSETransformation() error {
 	if arguments.DataWriter == nil {
 		return errors.New("Output is not set.")
@@ -51,6 +54,7 @@ func (arguments *Arguments) VerifyForNSETransformation() error {
 	return nil
 }
 
+// VerifyForKeyGeneration verifies whether correct arguments are used for key generation.
 func (arguments *Arguments) VerifyForKeyGeneration() error {
 	if arguments.KeyWriter == nil {
 		return errors.New("Output is not set.")
@@ -58,6 +62,7 @@ func (arguments *Arguments) VerifyForKeyGeneration() error {
 	return nil
 }
 
+// NewArguments creates new instance of arguments with 32 bytes key.
 func NewArguments() *Arguments {
 	return &Arguments{KeySize: 32}
 }

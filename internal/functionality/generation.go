@@ -8,11 +8,11 @@ import (
 	"github.com/ikcilrep/twister/internal/parser"
 )
 
-var notPositiveLengthError error = errors.New("Length of data which exists has to be positive.")
+var errNotPositiveLengthError error = errors.New("Length of data which exists has to be positive.")
 
 func randomBytes(length int) ([]byte, error) {
 	if length < 0 {
-		return nil, notPositiveLengthError
+		return nil, errNotPositiveLengthError
 	}
 	salt := make([]byte, length)
 	_, err := rand.Read(salt)
@@ -22,6 +22,7 @@ func randomBytes(length int) ([]byte, error) {
 	return salt, nil
 }
 
+// GenerateKey generates NSE key and writes it to file.
 func GenerateKey(arguments *parser.Arguments) error {
 	keyBytes, err := randomBytes(arguments.KeySize)
 

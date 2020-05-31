@@ -72,6 +72,7 @@ func decryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey, lastBlock
 	return
 }
 
+// Decrypt decrypts file with key and writes plaintext to another file.
 func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesWritten int64, err error) {
 	salt := make([]byte, saltSize)
 	saltBytesRead, err := io.ReadFull(arguments.DataReader, salt)
