@@ -41,7 +41,11 @@ func Test_files_ChunkedWriter(t *testing.T) {
 		}
 
 		for _, v := range data {
-			chunkedWriter.Write([]byte{v})
+			_, err = chunkedWriter.Write([]byte{v})
+			if err != nil {
+				t.Error(err)
+			}
+
 		}
 		err = chunkedWriter.Close()
 		if err != nil {

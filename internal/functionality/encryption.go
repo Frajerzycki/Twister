@@ -39,6 +39,7 @@ func writeEncryptedBlockWithRecoveryData(writer io.Writer, encryptedBlock []int6
 	return bytesWritten1 + bytesWritten2 + bytesWritten3 + bytesWritten4, nil
 }
 
+// Encrypt encrypts file with key and writes ciphertext to another file.
 func Encrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesWritten int64, err error) {
 
 	bytesRead = int64(0)

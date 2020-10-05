@@ -1,5 +1,6 @@
 package test
 
+// TestingWriter is writer used for tests.
 type TestingWriter struct {
 	data []byte
 }

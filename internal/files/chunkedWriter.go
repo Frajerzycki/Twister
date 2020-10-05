@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+// ChunkedWriter writes to writer when chunk is filled.
 type ChunkedWriter struct {
 	chunkSize   int
 	chunkMemory []byte
@@ -12,6 +13,7 @@ type ChunkedWriter struct {
 	writer      io.Writer
 }
 
+// NewChunkedWriter creates new ChunkedWriter.
 func NewChunkedWriter(writer io.Writer, chunkSize int) (*ChunkedWriter, error) {
 	if chunkSize < 1 {
 		return nil, errors.New("Chunk size has to be positive.")
@@ -49,6 +51,7 @@ func (writer *ChunkedWriter) Write(data []byte) (int, error) {
 	return dataFirstLength, nil
 }
 
+// Close closes ChunkedWriter and writes unwritten data.
 func (writer *ChunkedWriter) Close() error {
 	writer.chunkMemory = writer.chunkMemory[:writer.chunkSize-len(writer.chunk)]
 	return writer.writeAndClearChunk()
