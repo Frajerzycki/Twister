@@ -1,39 +1,45 @@
 package functionality
 
 import (
-	"github.com/ikcilrep/gonse/pkg/nse"
-	"github.com/ikcilrep/twister/internal/parser"
 	"io"
 	"math/big"
+
+	"github.com/ikcilrep/gonse/pkg/nse"
+	"github.com/ikcilrep/twister/internal/parser"
 )
 
-func retrieveDataFromReader(reader io.Reader) (encryptedBlock []int64, IV []int8, bytesRead int, err error) {
+func retrieveDataFromReader(reader io.Reader) (encryptedBlock []int64, IV []int8, salt []byte, bytesRead int, err error) {
 	encryptedBlockBytesLength, bytesRead1, err := nse.BytesToInt64FromReader(reader)
 	bytesRead += bytesRead1
 	if err != nil {
-		return nil, nil, bytesRead, err
+		return nil, nil, nil, bytesRead, err
 	}
 
 	encryptedBlockBytes := make([]byte, int(encryptedBlockBytesLength))
 	bytesRead1, err = io.ReadFull(reader, encryptedBlockBytes)
 	bytesRead += bytesRead1
 	if err != nil {
-		return nil, nil, bytesRead, err
+		return nil, nil, nil, bytesRead, err
 	}
 
 	encryptedBlock, err = nse.BytesToInt64s(encryptedBlockBytes)
 	if err != nil {
-		return nil, nil, bytesRead, err
+		return nil, nil, nil, bytesRead, err
 	}
 
 	IVBytes := make([]byte, blockSize)
 	bytesRead1, err = io.ReadFull(reader, IVBytes)
 	bytesRead += bytesRead1
 	if err != nil {
-		return nil, nil, bytesRead, err
+		return nil, nil, nil, bytesRead, err
 	}
 
 	IV = nse.BytesToInt8s(IVBytes)
+
+	salt = make([]byte, saltSize)
+	bytesRead1, err = io.ReadFull(reader, salt)
+	bytesRead += bytesRead1
+
 	return
 }
 
@@ -42,9 +48,9 @@ func unpad(block []byte, blockSize int) []byte {
 	return block[:len(block)-rest]
 }
 
-func decryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey, lastBlock []byte) (bytesRead int, bytesWritten int, block []byte, shouldContinue bool, err error) {
+func decryptBlock(arguments *parser.Arguments, key *big.Int, lastBlock []byte) (bytesRead int, bytesWritten int, block []byte, shouldContinue bool, err error) {
 	var bytesWritten1 int
-	encryptedBlock, IV, bytesRead, err := retrieveDataFromReader(arguments.DataReader)
+	encryptedBlock, IV, salt, bytesRead, err := retrieveDataFromReader(arguments.DataReader)
 
 	shouldContinue = true
 	if err != nil {
@@ -64,6 +70,11 @@ func decryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey, lastBlock
 		return
 	}
 
+	derivedKey, err := nse.DeriveKey(key, salt, blockSize)
+	if err != nil {
+		return bytesRead, 0, nil, false, err
+	}
+
 	block, err = nse.Decrypt(encryptedBlock, IV, derivedKey)
 	if err != nil {
 		return
@@ -73,25 +84,15 @@ func decryptBlock(arguments *parser.Arguments, derivedKey *nse.NSEKey, lastBlock
 }
 
 func Decrypt(key *big.Int, arguments *parser.Arguments) (bytesRead int64, bytesWritten int64, err error) {
-	salt := make([]byte, saltSize)
-	saltBytesRead, err := io.ReadFull(arguments.DataReader, salt)
-	if err != nil {
-		return int64(saltBytesRead), int64(0), err
-	}
-
-	derivedKey, err := nse.DeriveKey(key, salt, blockSize)
-	if err != nil {
-		return int64(saltSize), int64(0), err
-	}
 	var block []byte
 	shouldContinue := true
-	bytesRead = int64(saltSize)
+	bytesRead = int64(0)
 	bytesWritten = int64(0)
 
 	for shouldContinue {
 		var bytesRead1, bytesWritten1 int
 
-		bytesRead1, bytesWritten1, block, shouldContinue, err = decryptBlock(arguments, derivedKey, block)
+		bytesRead1, bytesWritten1, block, shouldContinue, err = decryptBlock(arguments, key, block)
 		bytesRead += int64(bytesRead1)
 		bytesWritten += int64(bytesWritten1)
 		if err != nil {
